@@ -1,0 +1,8 @@
+Here we store all the pages
+pages will be 
+    - Add questions
+    - generate Question paper
+    - Add bits
+    - Generate bits
+    - Edit question
+    - Edit bits
