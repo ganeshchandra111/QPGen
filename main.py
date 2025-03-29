@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 
-from pages.CreatePage import CreatePage
+from QPGen.pages.CreateQuestions import CreateQuestions
 from pages.MainPage import MainPage
 from pages.GanerateQuestions import GenerateQuestions
 
@@ -35,7 +35,7 @@ class QPGen:
 
         # Buttons for different counters
         page1_btn = tk.Button(
-            self.sidebar, text="Page 1", command=lambda: self.showPage(CreatePage)
+            self.sidebar, text="Page 1", command=lambda: self.showPage(CreateQuestions)
         )
         page1_btn.pack(fill="x", pady=5)
 

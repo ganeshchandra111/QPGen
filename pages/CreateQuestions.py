@@ -1,7 +1,7 @@
 from tkinter import *
 import tkinter as tk
 
-class CreatePage(tk.Frame):
+class CreateQuestions(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
 
