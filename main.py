@@ -38,7 +38,7 @@ class QPGen:
         page1_btn = tk.Button(
             root, text=text, command=lambda: self.showPage(page)
         )
-        page1_btn.pack(fill="x", pady=5)
+        page1_btn.pack(fill="x", pady=5,padx=10)
 
     def create_sidebar(self):
         # Sidebar for navigation
@@ -57,7 +57,7 @@ class QPGen:
         back_btn = tk.Button(
             self.sidebar, text="Back", command=lambda: self.showPage(MainPage)
         )
-        back_btn.pack(side="bottom",fill="x", pady=5)
+        back_btn.pack(side="bottom",fill="x", pady=5,padx=10)
 
     def run(self):
         self.root.mainloop()
