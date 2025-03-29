@@ -21,12 +21,6 @@ mainLabel = tk.Label(mainFrame, text="This is the main Frame and Main Page", bg=
 mainLabel.pack(padx=10, pady=10)
 mainFrame.grid(row=0, column=1, sticky="nsew")  
 
-
-mainFrame = tk.Frame(root, bg="white")
-mainLabel = tk.Label(mainFrame, text="This is the main Frame and Main Page", bg="white")
-mainLabel.pack(padx=10, pady=10)
-mainFrame.grid(row=0, column=1, sticky="nsew")  
-
 root.mainloop()
 
 
