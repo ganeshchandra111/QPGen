@@ -45,7 +45,6 @@ class QPGen:
         self.sidebar = tk.Frame(self.root, bg="lightgray", width=100)
         self.sidebar.pack(side="left", fill="y")
 
-
         # Buttons for different counters
         self.PageNavigationBtn(self.sidebar,CreateQuestions,"Create Questions")
         self.PageNavigationBtn(self.sidebar,GenerateQuestions,"Generate Questions")
