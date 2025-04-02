@@ -37,7 +37,7 @@ class CreateQuestions(tk.Frame):
 
         #Taking Questions
         self.text=Label(self,text="Enter Questions(Enter one question at a time)")
-        self.input = Text(self,width=30,height=5)
+        self.input = Entry(self)
 
         self.text.grid(row=3,columnspan=2)
         self.input.grid(row=4,columnspan=2)
