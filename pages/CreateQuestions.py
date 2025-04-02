@@ -28,9 +28,25 @@ class CreateQuestions(tk.Frame):
         
         #Creating a menu to select marks
         self.text = Label(self,text="Select Marks")
-        self.marks = ttk.Combobox(self,textvariable=self.marks_vari,values=[2,10],state="readonly")
+        self.marks = ttk.Combobox(self,textvariable=self.marks_vari,values=[2,5,10],state="readonly")
         self.marks.current(0) #Set Default Value as 2 (index value)
 
         self.text.grid(row=2, column=0, sticky="w")
         self.marks.grid(row=2,column=1,padx=10,pady=5, sticky='w')
 
+
+        #Taking Questions
+        self.text=Label(self,text="Enter Questions(Enter one question at a time)")
+        self.input = Text(self,width=30,height=5)
+
+        self.text.grid(row=3,columnspan=2)
+        self.input.grid(row=4,columnspan=2)
+
+        #Submit question to save into a json
+        self.submit= Button(self,text="Submit Question",command=self.save_questions)
+
+        self.submit.grid(row=4,column=3)
+
+
+    def save_questions(self):
+        print("Hello")
