@@ -10,6 +10,7 @@ class CreateQuestions(tk.Frame):
         #Variables used 
         self.marks_vari = tk.StringVar()
         self.unit_vari = tk.StringVar()
+        self.ques = tk.StringVar()
 
 
         self.lable = Label(self, text=''' This is the Questions Creations page ''')
@@ -40,7 +41,7 @@ class CreateQuestions(tk.Frame):
         self.input = Entry(self)
 
         self.text.grid(row=3,columnspan=2)
-        self.input.grid(row=4,columnspan=2)
+        self.input.grid(row=4,columnspan=2,rowspan=2)
 
         #Submit question to save into a json
         self.submit= Button(self,text="Submit Question",command=self.save_questions)
@@ -49,4 +50,6 @@ class CreateQuestions(tk.Frame):
 
 
     def save_questions(self):
-        print("Hello")
+
+        self.question =  self.input.get()
+        print(self.question) 
