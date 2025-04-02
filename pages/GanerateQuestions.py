@@ -7,3 +7,5 @@ class GenerateQuestions(tk.Frame):
 
         self.lable = Label(self, text=''' This is the Questions GenerationPage page ''')
         self.lable.pack(padx=10,pady=10)
+
+
