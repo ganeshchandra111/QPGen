@@ -201,7 +201,7 @@ class CreateMCQs(tk.Frame):
                 if f.endswith(".json"):  # Check if it's a JSON file
                     json_files.append(f[:-5])  # Remove ".json" and add to the list
 
-            print(json_files)  # Output: ['unit1', 'unit2', 'sample']
+            # print(json_files)  # Output: ['unit1', 'unit2', 'sample']
 
             return json_files
         except:
