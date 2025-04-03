@@ -150,7 +150,7 @@ class CreateQuestions(tk.Frame):
 
         # Message displayed if the question is inserted into the data folder
         self.LastQuestionLabel.config(
-            text=f"Question Added!\nFile: {filename}.json\nUnit: {unit}, Marks: {marks}, BT: {bt}\n\nQuestion: {question}"
+            text=f"Question Added!\nFile: {filename}\nUnit: {unit}, Marks: {marks}, BT: {bt}\n\nQuestion: {question}"
         )
 
     def getAllFilesFromQuestionsFolder(self):
