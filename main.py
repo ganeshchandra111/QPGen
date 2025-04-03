@@ -53,7 +53,6 @@ class QPGen:
         self.PageNavigationBtn(self.sidebar,GenerateMCQs,"GenerateMCQs")
         self.PageNavigationBtn(self.sidebar,EditMCQs,"EditMCQs")
 
-
         back_btn = tk.Button(
             self.sidebar, text="Back", command=lambda: self.showPage(MainPage)
         )
