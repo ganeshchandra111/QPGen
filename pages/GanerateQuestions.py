@@ -70,5 +70,4 @@ class GenerateQuestions(tk.Frame):
         next_button = Button(self, text="Next", width=10)
         next_button.grid(row=4, column=1, columnspan=4, pady=20)
 
-# Initialize the main Tkinter window
 
