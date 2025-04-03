@@ -111,6 +111,7 @@ class CreateMCQs(tk.Frame):
             self.opt3 = self.option3Entry.get()
             self.opt4 = self.option4Entry.get()
 
+            # Checks if the qurestion are empty,if empty it diplays a warning, if not empty it adds the question
             if(self.question!="" or
             self.opt1!="" or
             self.opt2!="" or
