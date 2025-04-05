@@ -34,7 +34,10 @@ class MainPage(tk.Frame):
         self.lable = Label(self, text=''' This is the main page ''')
         self.lable.pack(padx=10,pady=10)
 
-        self.CollegeNameFrame = tk.Frame(self) #THsi is a Frame for collge name entry 
+        self.MainPageFrame = Frame(self)
+
+
+        self.CollegeNameFrame = tk.Frame(self.MainPageFrame) #THsi is a Frame for collge name entry 
         self.collegeName = tk.Entry(self.CollegeNameFrame,width=100)
         self.collegeNameButton = tk.Button(self.CollegeNameFrame, text="Submit College Name",command=self.show_name)
 
@@ -42,4 +45,14 @@ class MainPage(tk.Frame):
         self.collegeName.grid(row=0,column=0,padx=10,pady=10)
         self.collegeNameButton.grid(row=0, column=1,padx=10, pady=10)
         self.CollegeNameFrame.pack(padx=10,pady=10)
+
+
+        
+
+
+        self.MainPageFrame.pack()
+
+
+
+
 
