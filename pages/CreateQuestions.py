@@ -5,86 +5,96 @@ import json, os
 
 class CreateQuestions(tk.Frame):
     def __init__(self, parentRoot):
-        super().__init__(parentRoot)
+        super().__init__(parentRoot, bg="#f7f9fa")  # Match main bg
 
-        self.label = Label(self, text="This is the Questions Creation page")
-        self.label.pack(padx=10, pady=10)
+        self.label = Label(self, text="📝 Create Questions", font=("Segoe UI", 16, "bold"), bg="#f7f9fa", fg="#2c3e50")
+        self.label.pack(padx=10, pady=20)
 
-        # Main Frame that contains all the other frames in the page
-        self.QuestionsEntryFrame = Frame(self)
+        self.QuestionsEntryFrame = Frame(self, bg="#f7f9fa")
 
-        #Defining a frame named essentials to input take essential stuff
-        #It contains frames like subject , unit , marks, cognitive level
-        self.Essentials = Frame(self.QuestionsEntryFrame)
+        # --- Essentials Section ---
+        self.Essentials = Frame(self.QuestionsEntryFrame, bg="#f7f9fa")
 
-
-        # To select subject file or create a new subject file from the data/questions folder
-        self.fileSelectionFrame = Frame(self.Essentials)
-        self.fileSelectionLabel = Label(self.fileSelectionFrame, text="Select or create a Subject: ").grid(row=0, column=0, padx=5, pady=10)
-        #Get sbuject files from data/questions folder
-        self.allFiles = self.getAllFilesFromQuestionsFolder()   
-        self.fileNameEntry = ttk.Combobox(self.fileSelectionFrame, width=20, values=self.allFiles)
+        # Subject / File Selection
+        self.fileSelectionFrame = Frame(self.Essentials, bg="#f7f9fa")
+        Label(
+            self.fileSelectionFrame, text="Subject:", font=("Segoe UI", 10),
+            bg="#f7f9fa", fg="#2c3e50"
+        ).grid(row=0, column=0, padx=5, pady=10, sticky="e")
+        self.allFiles = self.getAllFilesFromQuestionsFolder()
+        self.fileNameEntry = ttk.Combobox(self.fileSelectionFrame, width=25, values=self.allFiles, state="normal")
         self.fileNameEntry.grid(row=0, column=1, padx=5, pady=10)
-        self.fileSelectionFrame.grid(row=0, column=0,columnspan=3)
+        self.fileSelectionFrame.grid(row=0, column=0, columnspan=3, sticky="w")
 
-        # Select unit to store it in
-        self.unitNumberFrame = Frame(self.Essentials)
-        self.unitNumeberLabel = Label(self.unitNumberFrame, text="Select Unit: ").grid(row=1, column=0, padx=5, pady=10)
+        # Unit Number
+        self.unitNumberFrame = Frame(self.Essentials, bg="#f7f9fa")
+        Label(self.unitNumberFrame, text="Unit:", font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50").grid(row=0, column=0, padx=5, pady=10, sticky="e")
         self.unitOptions = [f"Unit {i}" for i in range(1, 6)]
-        self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.unitOptions, width=20, state="readonly")
+        self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.unitOptions, width=25, state="readonly")
         self.unitNumberEntry.current(0)
-        self.unitNumberEntry.grid(row=1, column=1, padx=5, pady=10)
-        self.unitNumberFrame.grid(row=1, column=0)
+        self.unitNumberEntry.grid(row=0, column=1, padx=5, pady=10)
+        self.unitNumberFrame.grid(row=1, column=0, sticky="w")
 
-        # Select the marks for the question
-        self.marksFrame = Frame(self.Essentials)
-        self.marksLabel = Label(self.marksFrame, text="Select Marks: ").grid(row=1, column=1, padx=5, pady=10)
+        # Marks
+        self.marksFrame = Frame(self.Essentials, bg="#f7f9fa")
+        Label(self.marksFrame, text="Marks:", font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50").grid(row=0, column=0, padx=5, pady=10, sticky="e")
         self.marksOptions = [2, 5, 10]
-        self.marksEntry = ttk.Combobox(self.marksFrame, values=self.marksOptions, width=20, state="readonly")
+        self.marksEntry = ttk.Combobox(self.marksFrame, values=self.marksOptions, width=25, state="readonly")
         self.marksEntry.current(0)
-        self.marksEntry.grid(row=1, column=2, padx=5, pady=10)
-        self.marksFrame.grid(row=1, column=1)
+        self.marksEntry.grid(row=0, column=1, padx=5, pady=10)
+        self.marksFrame.grid(row=1, column=1, sticky="w")
 
-    
-        # Cognitive level also known as bloom taxamony to specify the question type as thing like understand,evaulate,etc 
-        self.btFrame = Frame(self.Essentials)
-        self.btLabel = Label(self.btFrame, text="Select BT: ").grid(row=1, column=2, padx=5, pady=10)
+        # BT / Cognitive Level
+        self.btFrame = Frame(self.Essentials, bg="#f7f9fa")
+        Label(self.btFrame, text="Bloom's Taxonomy:", font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50").grid(row=0, column=0, padx=5, pady=10, sticky="e")
         self.btOptions = ["Understand", "Analyze", "Evaluate", "Remember"]
-        self.btEntry = ttk.Combobox(self.btFrame, values=self.btOptions, width=20, state="readonly")
+        self.btEntry = ttk.Combobox(self.btFrame, values=self.btOptions, width=25, state="readonly")
         self.btEntry.current(0)
-        self.btEntry.grid(row=1, column=3, padx=5, pady=10)
-        self.btFrame.grid(row=1,column=2)
+        self.btEntry.grid(row=0, column=1, padx=5, pady=10)
+        self.btFrame.grid(row=1, column=2, sticky="w")
 
-        #pack essential frame as we dont need to config it further
-        self.Essentials.pack()
+        self.Essentials.pack(padx=20, pady=10)
 
+        # --- Question Text Input ---
+        self.questionFrame = Frame(self.QuestionsEntryFrame, bg="#f7f9fa")
+        Label(self.questionFrame, text="Enter your question:", font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50").grid(row=0, column=0, padx=5, pady=5)
+        self.questionEntry = Text(self.questionFrame, height=3, width=60, font=("Segoe UI", 10))
+        self.questionEntry.grid(row=1, column=0, columnspan=2, padx=5, pady=5)
+        self.questionFrame.pack(pady=10)
 
-        #Frame to load the question frame to take questions from user
-        self.questionFrame = Frame(self.QuestionsEntryFrame, width=100)
-        self.questionEntryLabel = Label(self.questionFrame, text="Enter your question:")
-        self.questionEntry = Text(self.questionFrame, height=2, width=50)
-        self.questionEntryLabel.grid(row=0, column=0, padx=5, pady=5)
-        self.questionEntry.grid(row=0, column=1, padx=5, pady=5)
-
-        # pack essential as have finished the ui for questions
-        self.questionFrame.pack()
-
-        
-        # Submit Button
-        self.submitButton = Button(self.QuestionsEntryFrame, text="Add Question", width=50, command=self.addQuestion)
+        # --- Submit Button ---
+        self.submitButton = Button(
+            self.QuestionsEntryFrame,
+            text="➕ Add Question",
+            font=("Segoe UI", 10, "bold"),
+            bg="#2ecc71", fg="white",
+            activebackground="#27ae60", activeforeground="white",
+            relief="flat", padx=10, pady=5,
+            width=30,
+            command=self.addQuestion
+        )
         self.submitButton.pack(pady=20)
 
-        # To give notes and appropriate output after trying to insert data into the files
-        self.LastQuestionFrame = Frame(self.QuestionsEntryFrame)
+        # --- Last Added Question Preview ---
+        self.LastQuestionFrame = Frame(self.QuestionsEntryFrame, bg="#f7f9fa")
         self.LastQuestionNoteLabel = Label(
-            self.LastQuestionFrame, text="When you add a question, it will be displayed below.\n*Note: Only the latest added question will be shown."
+            self.LastQuestionFrame,
+            text="Last added question will appear below:",
+            font=("Segoe UI", 9, "italic"),
+            fg="#7f8c8d", bg="#f7f9fa"
         )
-        self.LastQuestionLabel = Label(self.LastQuestionFrame, text="")
+        self.LastQuestionLabel = Label(
+            self.LastQuestionFrame,
+            text="",
+            wraplength=600,
+            font=("Segoe UI", 10),
+            bg="#f7f9fa",
+            fg="#2c3e50"
+        )
         self.LastQuestionNoteLabel.pack()
         self.LastQuestionLabel.pack()
-        self.LastQuestionFrame.pack(pady=20)
+        self.LastQuestionFrame.pack(pady=10)
 
-        # Packing the main frame
         self.QuestionsEntryFrame.pack()
 
     def addQuestion(self):

@@ -5,88 +5,91 @@ from tkinter import ttk
 
 class EditMCQs(tk.Frame):
     def __init__(self, parentRoot):
-        super().__init__(parentRoot)
+        super().__init__(parentRoot, bg="#f7f9fa")
 
-        self.selected_question = None  # Track which question is selected for editing
+        self.selected_question = None
 
-        self.lable = Label(self, text='EditMCQs')
-        self.lable.pack(padx=10, pady=10)
+        self.lable = Label(self, text='✏️ Edit MCQs', font=("Segoe UI", 16, "bold"), bg="#f7f9fa", fg="#2c3e50")
+        self.lable.pack(padx=10, pady=20)
 
-        self.EditMCQsFrame = Frame(self)
+        self.EditMCQsFrame = Frame(self, bg="#f7f9fa")
 
-        self.fileSelectorFrame = Frame(self.EditMCQsFrame, width=50)
-        self.fileSelectLable = Label(self.fileSelectorFrame, text="Select the File: ")
+        # --- File Selector ---
+        self.fileSelectorFrame = Frame(self.EditMCQsFrame, bg="#f7f9fa")
+        self.fileSelectLable = Label(self.fileSelectorFrame, text="Select File:", font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50")
         self.options = self.getAllFilesFromMCQsFolder()
-        self.fileSelectDropBox = ttk.Combobox(self.fileSelectorFrame, values=self.options, state='readonly')
+        self.fileSelectDropBox = ttk.Combobox(self.fileSelectorFrame, values=self.options, state='readonly', width=30)
         if self.options:
             self.fileSelectDropBox.current(0)
-        self.fileSelectButton = Button(self.fileSelectorFrame, text='Select file', command=self.PrintAllTheQuestionsWithEditButton)
-        self.fileSelectLable.grid(row=0, column=0)
-        self.fileSelectDropBox.grid(row=0, column=1)
-        self.fileSelectButton.grid(row=0, column=2)
+        self.fileSelectButton = Button(
+            self.fileSelectorFrame, text='Load Questions',
+            bg="#3498db", fg="white", font=("Segoe UI", 9, "bold"),
+            activebackground="#2980b9", relief="flat",
+            command=self.PrintAllTheQuestionsWithEditButton
+        )
+        self.fileSelectLable.grid(row=0, column=0, padx=5, pady=10)
+        self.fileSelectDropBox.grid(row=0, column=1, padx=5, pady=10)
+        self.fileSelectButton.grid(row=0, column=2, padx=5, pady=10)
         self.fileSelectorFrame.pack()
 
-        self.EditFrame = Frame(self.EditMCQsFrame)
+        # --- Edit Section ---
+        self.EditFrame = Frame(self.EditMCQsFrame, bg="#f7f9fa")
 
-        # This is the Question Frame
-        self.EditQuestionFrame = Frame(self.EditFrame)
-        self.EditQuestionLable = Label(self.EditQuestionFrame, text="Edit your question here: ")
-        self.EditQuestionEntry = Entry(self.EditQuestionFrame, width=100)
-        self.EditQuestionLable.grid(row=0, column=0)
-        self.EditQuestionEntry.grid(row=0, column=1)
-        self.EditQuestionFrame.pack(pady=5)
+        self.EditQuestionFrame = Frame(self.EditFrame, bg="#f7f9fa")
+        self.EditQuestionLable = Label(self.EditQuestionFrame, text="Question:", font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50")
+        self.EditQuestionEntry = Entry(self.EditQuestionFrame, width=80, font=("Segoe UI", 10))
+        self.EditQuestionLable.grid(row=0, column=0, padx=5, pady=10)
+        self.EditQuestionEntry.grid(row=0, column=1, padx=5, pady=10)
+        self.EditQuestionFrame.pack()
 
-        # All options frame, for the option entry boxes
-        self.MCQOptionsFrame = Frame(self.EditFrame, width=100)
+        # --- MCQ Options ---
+        self.MCQOptionsFrame = Frame(self.EditFrame, bg="#f7f9fa")
 
-        # Option 1
-        self.Option1Frame = Frame(self.MCQOptionsFrame)
-        self.option1Label = Label(self.Option1Frame, text="Option-1: ")
-        self.option1Label.grid(row=0, column=0, padx=5, pady=10)
-        self.option1Entry = Entry(self.Option1Frame)
-        self.option1Entry.grid(row=0, column=1, padx=5, pady=10)
-        self.Option1Frame.grid(row=0, column=0)
+        def makeOptionRow(label_text, row, entry_attr):
+            frame = Frame(self.MCQOptionsFrame, bg="#f7f9fa")
+            label = Label(frame, text=label_text, font=("Segoe UI", 10), bg="#f7f9fa", fg="#2c3e50")
+            entry = Entry(frame, width=50, font=("Segoe UI", 10))
+            setattr(self, entry_attr, entry)
+            label.grid(row=0, column=0, padx=5, pady=5, sticky="w")
+            entry.grid(row=0, column=1, padx=5, pady=5)
+            frame.grid(row=row[0], column=row[1], padx=10, pady=5, sticky="w")
 
-        # Option 2
-        self.Option2Frame = Frame(self.MCQOptionsFrame)
-        self.option2Label = Label(self.Option2Frame, text="Option-2: ")
-        self.option2Label.grid(row=0, column=0, padx=5, pady=10)
-        self.option2Entry = Entry(self.Option2Frame)
-        self.option2Entry.grid(row=0, column=1, padx=5, pady=10)
-        self.Option2Frame.grid(row=0, column=1)
-
-        # Option 3
-        self.Option3Frame = Frame(self.MCQOptionsFrame)
-        self.option3Label = Label(self.Option3Frame, text="Option-3: ")
-        self.option3Label.grid(row=0, column=0, padx=5, pady=10)
-        self.option3Entry = Entry(self.Option3Frame)
-        self.option3Entry.grid(row=0, column=1, padx=5, pady=10)
-        self.Option3Frame.grid(row=1, column=0)
-
-        # Option 4
-        self.Option4Frame = Frame(self.MCQOptionsFrame)
-        self.option4Label = Label(self.Option4Frame, text="Option-4: ")
-        self.option4Label.grid(row=0, column=0, padx=5, pady=10)
-        self.option4Entry = Entry(self.Option4Frame)
-        self.option4Entry.grid(row=0, column=1, padx=5, pady=10)
-        self.Option4Frame.grid(row=1, column=1)
+        makeOptionRow("Option 1:", (0, 0), "option1Entry")
+        makeOptionRow("Option 2:", (0, 1), "option2Entry")
+        makeOptionRow("Option 3:", (1, 0), "option3Entry")
+        makeOptionRow("Option 4:", (1, 1), "option4Entry")
 
         self.MCQOptionsFrame.pack()
 
-        # Save Changes Button
-        self.saveButton = Button(self.EditFrame, text="Save Changes", command=self.SaveChanges, width=50)
-        self.saveButton.pack(pady=10)
+        # --- Save Button ---
+        self.saveButton = Button(
+            self.EditFrame,
+            text="💾 Save Changes",
+            font=("Segoe UI", 10, "bold"),
+            bg="#2ecc71", fg="white",
+            activebackground="#27ae60",
+            relief="flat", width=30, pady=5,
+            command=self.SaveChanges
+        )
+        self.saveButton.pack(pady=20)
 
         self.EditFrame.pack()
 
-        self.DisplayQuestionsFrame = Frame(self.EditMCQsFrame)
-        self.DisplayQuestionsNoteLable = Label(self.DisplayQuestionsFrame, text="Here you can see all of your Questions\nClick on the Edit Button to edit that particular question")
-        self.DisplayQuestionsNoteLable.pack()
+        # --- Display Questions Info ---
+        self.DisplayQuestionsFrame = Frame(self.EditMCQsFrame, bg="#f7f9fa")
+        self.DisplayQuestionsNoteLable = Label(
+            self.DisplayQuestionsFrame,
+            text="Questions will appear here.\nClick 'Edit' to load a question.",
+            font=("Segoe UI", 9, "italic"),
+            fg="#7f8c8d", bg="#f7f9fa"
+        )
+        self.DisplayQuestionsNoteLable.pack(pady=10)
         self.DisplayQuestionsFrame.pack()
 
-        self.messageLabel = Label(self, text="", fg="red")
+        # --- Message at bottom ---
+        self.messageLabel = Label(self, text="", fg="red", font=("Segoe UI", 10), bg="#f7f9fa")
         self.messageLabel.pack(pady=10)
-        
+
         self.EditMCQsFrame.pack()
 
         # Message label at the bottom of the frame
