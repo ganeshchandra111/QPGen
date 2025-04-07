@@ -1,0 +1,58 @@
+{
+  "Unit 1": {
+    "2": [
+      {
+        "question": "What are the different types of mobile applications?",
+        "bt": "Understand"
+      },
+      {
+        "question": "Explain the role of an IDE in mobile app development.",
+        "bt": "Understand"
+      }
+    ],
+    "5": [
+      {
+        "question": "Describe the components of an Android application.",
+        "bt": "Understand"
+      },
+      {
+        "question": "What is the purpose of an 'Intent' in Android development?",
+        "bt": "Understand"
+      }
+    ],
+    "10": [
+      {
+        "question": "Discuss the Android activity lifecycle and its significance in app development.",
+        "bt": "Analyze"
+      }
+    ]
+  },
+  "Unit 2": {
+    "2": [
+      {
+        "question": "What are the differences between native and hybrid mobile applications?",
+        "bt": "Understand"
+      },
+      {
+        "question": "Explain how UI components are handled in Android applications.",
+        "bt": "Understand"
+      }
+    ],
+    "5": [
+      {
+        "question": "What is the role of Android's 'Manifest' file?",
+        "bt": "Understand"
+      },
+      {
+        "question": "How do you handle background tasks in Android?",
+        "bt": "Understand"
+      }
+    ],
+    "10": [
+      {
+        "question": "Implement an Android app that retrieves data from an external API.",
+        "bt": "Create"
+      }
+    ]
+  }
+}

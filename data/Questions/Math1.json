@@ -1,0 +1,58 @@
+{
+  "Unit 1": {
+    "2": [
+      {
+        "question": "What is the difference between scalar and vector quantities?",
+        "bt": "Understand"
+      },
+      {
+        "question": "Define the term 'derivative' in calculus.",
+        "bt": "Understand"
+      }
+    ],
+    "5": [
+      {
+        "question": "Explain the concept of limits in calculus.",
+        "bt": "Understand"
+      },
+      {
+        "question": "What is the chain rule in differentiation?",
+        "bt": "Understand"
+      }
+    ],
+    "10": [
+      {
+        "question": "Find the integral of x^2 + 3x + 2 with respect to x.",
+        "bt": "Apply"
+      }
+    ]
+  },
+  "Unit 2": {
+    "2": [
+      {
+        "question": "What is a matrix and how is it used in solving linear systems?",
+        "bt": "Understand"
+      },
+      {
+        "question": "Explain the process of finding the determinant of a matrix.",
+        "bt": "Understand"
+      }
+    ],
+    "5": [
+      {
+        "question": "What are the properties of eigenvalues and eigenvectors?",
+        "bt": "Understand"
+      },
+      {
+        "question": "Explain Cramer's rule for solving systems of linear equations.",
+        "bt": "Understand"
+      }
+    ],
+    "10": [
+      {
+        "question": "Solve the following system of equations using matrices: x + y = 10, 2x + 3y = 18.",
+        "bt": "Apply"
+      }
+    ]
+  }
+}
