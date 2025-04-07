@@ -11,7 +11,7 @@ from pages.GenerateMCQs import GenerateMCQs
 from pages.EditQuestions import EditQuestions
 
 
-# root = Tk()
+# root = Tk() 
 class QPGen:
 
     def __init__(self):

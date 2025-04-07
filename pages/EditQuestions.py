@@ -75,7 +75,7 @@ class EditQuestions(tk.Frame):
 
         
         # Submit Button
-        self.submitButton = Button(self.QuestionsEntryFrame, text="Add Question", width=50, command=self.EditQuestion)
+        self.submitButton = Button(self.QuestionsEntryFrame, text="Edit Question", width=50, command=self.EditQuestion)
         self.submitButton.pack(pady=20)
 
         # To give notes and appropriate output after trying to insert data into the files
@@ -122,6 +122,7 @@ class EditQuestions(tk.Frame):
 
         textArea.tag_configure("bold", font=("Arial", 12, "bold"))
         textArea.tag_configure("italic", font=("Arial", 11, "italic"))
+
 
     def loadQuestions(self):
         """Loads questions from the selected JSON file and refreshes UI."""
@@ -170,5 +171,4 @@ class EditQuestions(tk.Frame):
 
 
     def EditQuestion(self):
-        print("Edited Question")
-        
+        print("HELLo")
