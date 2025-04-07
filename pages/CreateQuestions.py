@@ -3,7 +3,6 @@ import tkinter as tk
 from tkinter import ttk
 import json, os
 
-
 class CreateQuestions(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
