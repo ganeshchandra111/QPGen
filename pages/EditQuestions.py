@@ -8,7 +8,7 @@ class EditQuestions(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
 
-        self.lable = Label(self, text=''' This is the Questions GenerationPage page ''')
+        self.lable = Label(self, text=''' This is the Edit Questions page ''')
         self.lable.pack(padx=10,pady=10)
 
 
@@ -36,7 +36,7 @@ class EditQuestions(tk.Frame):
         self.unitNumeberLabel = Label(self.unitNumberFrame, text="Select Unit: ").grid(row=1, column=0, padx=5, pady=10)
         self.unitOptions = [f"Unit {i}" for i in range(1, 6)]
         self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.unitOptions, width=20, state="readonly")
-        self.unitNumberEntry.current(0)
+        # self.unitNumberEntry.current(0)
         self.unitNumberEntry.grid(row=1, column=1, padx=5, pady=10)
         self.unitNumberFrame.grid(row=1, column=0)
 
@@ -45,7 +45,7 @@ class EditQuestions(tk.Frame):
         self.marksLabel = Label(self.marksFrame, text="Select Marks: ").grid(row=1, column=1, padx=5, pady=10)
         self.marksOptions = [2, 5, 10]
         self.marksEntry = ttk.Combobox(self.marksFrame, values=self.marksOptions, width=20, state="readonly")
-        self.marksEntry.current(0)
+        # self.marksEntry.current(0)
         self.marksEntry.grid(row=1, column=2, padx=5, pady=10)
         self.marksFrame.grid(row=1, column=1)
 
@@ -55,7 +55,7 @@ class EditQuestions(tk.Frame):
         self.btLabel = Label(self.btFrame, text="Select BT: ").grid(row=1, column=2, padx=5, pady=10)
         self.btOptions = ["Understand", "Analyze", "Evaluate", "Remember"]
         self.btEntry = ttk.Combobox(self.btFrame, values=self.btOptions, width=20, state="readonly")
-        self.btEntry.current(0)
+        # self.btEntry.current(0)
         self.btEntry.grid(row=1, column=3, padx=5, pady=10)
         self.btFrame.grid(row=1,column=2)
 
@@ -64,18 +64,18 @@ class EditQuestions(tk.Frame):
 
 
         #Frame to load the question frame to take questions from user
-        self.questionFrame = Frame(self.QuestionsEntryFrame, width=100)
-        self.questionEntryLabel = Label(self.questionFrame, text="Enter your question:")
-        self.questionEntry = Text(self.questionFrame, height=2, width=50)
+        self.questionTextFrame = Frame(self.QuestionsEntryFrame, width=100)
+        self.questionEntryLabel = Label(self.questionTextFrame, text="Enter your question:")
+        self.questionEntry = Text(self.questionTextFrame, height=2, width=50)
         self.questionEntryLabel.grid(row=0, column=0, padx=5, pady=5)
         self.questionEntry.grid(row=0, column=1, padx=5, pady=5)
 
         # pack essential as have finished the ui for questions
-        self.questionFrame.pack()
+        self.questionTextFrame.pack()
 
         
         # Submit Button
-        self.submitButton = Button(self.QuestionsEntryFrame, text="Edit Question", width=50, command=self.EditQuestion)
+        self.submitButton = Button(self.QuestionsEntryFrame, text="Edit Question", width=50, command=self.saveQuestions)
         self.submitButton.pack(pady=20)
 
         # To give notes and appropriate output after trying to insert data into the files
@@ -91,47 +91,16 @@ class EditQuestions(tk.Frame):
         # Packing the main frame
         self.QuestionsEntryFrame.pack()
 
-    def displayQuestions(self, data):
-        """Refreshes the frame and displays updated questions in a scrollable list."""
-        
-        # Check if the frame already exists, destroy it to refresh
-        if hasattr(self, "questionFrame"):
-            self.questionFrame.destroy()
-
-        # Create a new frame for questions
-        self.questionFrame = Frame(self)
-        self.questionFrame.pack(fill=BOTH, expand=True, padx=10, pady=10)
-
-        # Scrollable Text Widget
-        textArea = scrolledtext.ScrolledText(self.questionFrame, width=70, height=20, wrap=WORD, font=("Arial", 12))
-        textArea.pack(padx=10, pady=10, fill=BOTH, expand=True)
-
-        if not data:
-            textArea.insert(END, "No questions found.\n")
-            return
-
-        # Display Questions by Unit and Marks
-        for unit, marks_data in data.items():
-            textArea.insert(END, f"\n📌 {unit}:\n", "bold")
-            for marks, questions in marks_data.items():
-                textArea.insert(END, f"  ➖ {marks} Marks:\n", "italic")
-                for idx, question in enumerate(questions, 1):
-                    q_text = question.get("question", "Unknown Question")
-                    bt_text = question.get("bt", "N/A")
-                    textArea.insert(END, f"    {idx}. {q_text} (BT: {bt_text})\n")
-
-        textArea.tag_configure("bold", font=("Arial", 12, "bold"))
-        textArea.tag_configure("italic", font=("Arial", 11, "italic"))
 
 
     def loadQuestions(self):
         """Loads questions from the selected JSON file and refreshes UI."""
-        filename = self.fileNameEntry.get().strip()
-        if not filename:
+        self.filename = self.fileNameEntry.get().strip()
+        if not self.filename:
             messagebox.showerror("Error", "Please select a file!")
             return
 
-        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "Questions", f"{filename}.json")
+        file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "data", "Questions", f"{self.filename}.json")
 
         if not os.path.exists(file_path):
             messagebox.showerror("Error", "File not found!")
@@ -148,7 +117,78 @@ class EditQuestions(tk.Frame):
         # Refresh the UI with new data
         self.displayQuestions(data)
 
-    
+    def displayQuestions(self, data):
+        """Displays questions in framed format with Edit and Delete buttons."""
+
+        # Destroy previous frame if it exists
+        if hasattr(self, "questionFrame"):
+            self.questionFrame.destroy()
+
+        # Create main frame
+        self.questionFrame = Frame(self)
+        self.questionFrame.pack(fill=BOTH, expand=True, padx=10, pady=10)
+
+        # Create canvas and scrollbar for scrollable content
+        canvas = Canvas(self.questionFrame, height=400)
+        scrollbar = Scrollbar(self.questionFrame, orient="vertical", command=canvas.yview)
+        scrollable_frame = Frame(canvas)
+
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side=LEFT, fill=BOTH, expand=True)
+        scrollbar.pack(side=RIGHT, fill=Y)
+
+        # Add scroll with mouse wheel
+        def on_mouse_scroll(event):
+            canvas.yview_scroll(-1 * (event.delta // 120), "units")
+        canvas.bind_all("<MouseWheel>", on_mouse_scroll)
+
+        if not data:
+            Label(scrollable_frame, text="No questions found.", font=("Arial", 12)).pack(pady=10)
+            return
+
+        # Display questions by unit and marks
+        for unit, marks_data in data.items():
+            unitFrame = Frame(scrollable_frame)
+            unitFrame.pack(fill="x", padx=10, pady=10)
+
+            Label(unitFrame, text=f'📘 Unit: {unit}', font=("Arial", 12, "bold")).pack(pady=5)
+
+            for marks, questions in marks_data.items():
+                Label(unitFrame, text=f'   📝 {marks} Marks', font=("Arial", 11, "italic")).pack(anchor="w")
+
+                for index, q in enumerate(questions, 1):
+                    #Loading the unit and marks into dictionary
+                    question_data = q.copy()
+                    question_data['unit'] = unit
+                    question_data['marks'] = marks
+
+                    question_text = q.get("question")
+                    bt = q.get("bt")
+
+                    questionFrame = Frame(unitFrame, relief="groove", borderwidth=2)
+                    questionFrame.pack(fill="x", pady=5, padx=10)
+
+                    Label(questionFrame, text=f"{index}. {question_text}", font=("Arial", 10, "bold"), wraplength=400, justify="left").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+
+                    Label(questionFrame, text=f"BT Level: {bt}", font=("Arial", 9)).grid(row=1, column=0, sticky="w", padx=5)
+
+                    btnFrame = Frame(questionFrame)
+                    btnFrame.grid(row=0, column=1, rowspan=2, padx=10)
+
+                    Button(btnFrame, text="Edit", width=6, 
+                        command=lambda q=question_data: self.EditQuestion(q)).pack(pady=2)
+
+                    Button(btnFrame, text="DEL", width=6, 
+                        command=lambda q=question_data: self.deleteQuestions(q)).pack(pady=2)
+
+
+        
     def getAllFilesFromQuestionsFolder(self):
         
         #get all the files from the data/questions folder
@@ -170,5 +210,132 @@ class EditQuestions(tk.Frame):
             return []
 
 
-    def EditQuestion(self):
-        print("HELLo")
+    def EditQuestion(self,data):
+        
+        unit = data['unit']
+        marks = data['marks']
+        bt = data['bt']
+        question = data['question']
+
+        #Setting the values of the Comboboxes and text to the question value we want to edit
+        self.unitNumberEntry.set(unit)
+        self.marksEntry.set(marks)
+        self.btEntry.set(bt)
+        self.questionEntry.delete('1.0',END)
+        self.questionEntry.insert('1.0',question)
+        # print(type(q))
+        # print(q)
+        self.deleteQuestions(data)
+        print("Deleted Questions")
+        
+    def deleteQuestions(self,q):
+        
+        #Getting values from the dictionary 'q' to delete 
+        unit = q['unit']
+        marks = q['marks']
+        bt = q['bt']
+        question = q['question']
+
+        #If there is no question
+        if not question:
+            self.LastQuestionLabel.config(text="Error: Please enter a question.")
+            return
+
+        # Setting up folder and file paths
+        current_folder_path = os.path.dirname(os.path.abspath(__file__))
+        data_folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
+
+        if not os.path.exists(data_folder_path):
+            os.makedirs(data_folder_path)
+
+        file_path = os.path.join(data_folder_path, f"{self.filename}.json")
+
+        # Load existing data if available
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as json_file:
+                try:
+                    data = json.load(json_file)
+                except json.JSONDecodeError:
+                    data = {}
+        else:
+            data = {}
+
+        # Try to delete the question if it exists
+        if unit in data and marks in data[unit]:
+            questions_list = data[unit][marks]
+            original_length = len(questions_list)
+            # Filter out the question you want to delete
+            data[unit][marks] = [x for x in questions_list if x.get("question") != question]
+
+            if len(data[unit][marks]) < original_length:
+                # Save the updated data
+                with open(file_path, "w", encoding="utf-8") as json_file:
+                    json.dump(data, json_file, indent=4)
+                print("Deleted question.")
+            else:
+                print("Question not found.")
+        else:
+            print("Unit or marks not found.")
+        self.loadQuestions()
+
+    def saveQuestions(self):
+        # self.displayQuestions()
+
+        unit = self.unitNumberEntry.get()
+        marks = self.marksEntry.get()
+        question = self.questionEntry.get("1.0", END).strip()
+        bt = self.btEntry.get()
+
+        if not question:
+            self.LastQuestionLabel.config(text="Error: Please enter a question.")
+            return
+
+        # Setting up folder and file paths
+        current_folder_path = os.path.dirname(os.path.abspath(__file__))
+        data_folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
+
+        if not os.path.exists(data_folder_path):
+            os.makedirs(data_folder_path)
+
+        file_path = os.path.join(data_folder_path, f"{self.filename}.json")
+
+        # Load existing data if available
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as json_file:
+                try:
+                    data = json.load(json_file)
+                except json.JSONDecodeError:
+                    data = {}
+        else:
+            data = {}
+
+        # Initialize unit if not present
+        if unit not in data:
+            data[unit] = {}
+
+        # Initialize marks if not present
+        if marks not in data[unit]:
+            data[unit][marks] = []
+
+          # Check for duplicate question
+        for entry in data[unit][marks]:
+            if entry["question"] == question:
+                self.LastQuestionLabel.config(text="Error: Duplicate question exists.")
+                return
+            
+        # Add new question
+        data[unit][marks].append({"question": question, "bt": bt})
+
+        # Insert the data into the json file
+        with open(file_path, "w", encoding="utf-8") as json_file:
+            json.dump(data, json_file, indent=4)
+
+            print("Editted Question")
+
+        #Empty the values in the fields unit,marks,bt and questions
+        self.unitNumberEntry.set("")
+        self.marksEntry.set("")
+        self.btEntry.set("")
+        self.questionEntry.delete('1.0',END)
+
+        self.loadQuestions()
