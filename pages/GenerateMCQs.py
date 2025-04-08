@@ -9,38 +9,47 @@ from docx import Document
 class GenerateMCQs(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
+        self.pack(padx=20, pady=20)
 
-        self.label = Label(self, text="Generate MCQs")
-        self.label.pack(padx=10, pady=10)
+        # Title Label
+        self.label = ttk.Label(self, text="Generate MCQs", font=("Arial", 16, "bold"))
+        self.label.pack(pady=(0, 10))
 
-        self.GenerateMCQsFrame = Frame(self)
+        # Frame for MCQ Input and Options
+        self.GenerateMCQsFrame = ttk.Frame(self)
+        self.GenerateMCQsFrame.pack(fill=tk.BOTH, expand=True)
 
-        self.GenerateMCQsInputsFrame = Frame(self.GenerateMCQsFrame)
+        # Frame for Inputs
+        self.GenerateMCQsInputsFrame = ttk.Frame(self.GenerateMCQsFrame)
+        self.GenerateMCQsInputsFrame.pack(pady=10)
 
-        self.GenerateMCQsLabel = Label(self.GenerateMCQsInputsFrame, text="Select a file: ")
+        # File Selection Label and Combobox
+        self.GenerateMCQsLabel = ttk.Label(self.GenerateMCQsInputsFrame, text="Select a file:")
+        self.GenerateMCQsLabel.grid(row=0, column=0, padx=10, pady=5, sticky=tk.W)
+
         options = self.GetAllMCQFiles()
-        self.GenerateMCQsFileSelect = ttk.Combobox(self.GenerateMCQsInputsFrame, values=options)
-        self.GenerateMCQsButton = Button(
+        self.GenerateMCQsFileSelect = ttk.Combobox(self.GenerateMCQsInputsFrame, values=options, state="readonly", width=30)
+        self.GenerateMCQsFileSelect.grid(row=0, column=1, padx=10, pady=5)
+
+        # Generate Button
+        self.GenerateMCQsButton = ttk.Button(
             self.GenerateMCQsInputsFrame, text="Generate MCQs", command=self.DisplayQuestionsInTextBox
         )
+        self.GenerateMCQsButton.grid(row=0, column=2, padx=10, pady=5)
 
-        self.GenerateMCQsLabel.grid(row=0, column=0, padx=10)
-        self.GenerateMCQsFileSelect.grid(row=0, column=1, padx=10)
-        self.GenerateMCQsButton.grid(row=0, column=2)
-
-        self.GenerateMCQsInputsFrame.pack()
-
-        self.textArea = Text(self.GenerateMCQsFrame, wrap=WORD, height=20, width=60)
+        # Text Area for Displaying Questions
+        self.textArea = tk.Text(self.GenerateMCQsFrame, wrap=WORD, height=20, width=60, font=("Courier", 10))
         self.textArea.pack(pady=10)
 
-        self.saveButton = Button(self.GenerateMCQsFrame, text="Save to Word", command=self.SaveQuestionsToWord)
-        self.saveButton.pack(pady=5)
+        # Save Button
+        self.saveButton = ttk.Button(self.GenerateMCQsFrame, text="Save to Word", command=self.SaveQuestionsToWord)
+        self.saveButton.pack(pady=(5, 10))
 
-        self.updateMessage = Label(self.GenerateMCQsFrame)
+        # Update Message Label
+        self.updateMessage = ttk.Label(self.GenerateMCQsFrame, text="", foreground="green")
         self.updateMessage.pack()
 
-        self.GenerateMCQsFrame.pack()
-
+        # Initialize Questions List
         self.questions = []
 
     def GetTheDataInTheSelectedFile(self):
