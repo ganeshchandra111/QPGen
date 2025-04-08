@@ -1,6 +1,6 @@
 from tkinter import *
 import tkinter as tk
-from tkinter import ttk,scrolledtext,messagebox
+from tkinter import ttk,messagebox
 import json, os
 
 
@@ -36,7 +36,6 @@ class EditQuestions(tk.Frame):
         self.unitNumeberLabel = Label(self.unitNumberFrame, text="Select Unit: ").grid(row=1, column=0, padx=5, pady=10)
         self.unitOptions = [f"Unit {i}" for i in range(1, 6)]
         self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.unitOptions, width=20, state="readonly")
-        # self.unitNumberEntry.current(0)
         self.unitNumberEntry.grid(row=1, column=1, padx=5, pady=10)
         self.unitNumberFrame.grid(row=1, column=0)
 
@@ -45,7 +44,6 @@ class EditQuestions(tk.Frame):
         self.marksLabel = Label(self.marksFrame, text="Select Marks: ").grid(row=1, column=1, padx=5, pady=10)
         self.marksOptions = [2, 5, 10]
         self.marksEntry = ttk.Combobox(self.marksFrame, values=self.marksOptions, width=20, state="readonly")
-        # self.marksEntry.current(0)
         self.marksEntry.grid(row=1, column=2, padx=5, pady=10)
         self.marksFrame.grid(row=1, column=1)
 
@@ -55,7 +53,6 @@ class EditQuestions(tk.Frame):
         self.btLabel = Label(self.btFrame, text="Select BT: ").grid(row=1, column=2, padx=5, pady=10)
         self.btOptions = ["Understand", "Analyze", "Evaluate", "Remember"]
         self.btEntry = ttk.Combobox(self.btFrame, values=self.btOptions, width=20, state="readonly")
-        # self.btEntry.current(0)
         self.btEntry.grid(row=1, column=3, padx=5, pady=10)
         self.btFrame.grid(row=1,column=2)
 
@@ -80,11 +77,7 @@ class EditQuestions(tk.Frame):
 
         # To give notes and appropriate output after trying to insert data into the files
         self.LastQuestionFrame = Frame(self.QuestionsEntryFrame)
-        # self.LastQuestionNoteLabel = Label(
-        #     self.LastQuestionFrame, text="When you add a question, it will be displayed below.\n*Note: Only the latest added question will be shown."
-        # )
         self.LastQuestionLabel = Label(self.LastQuestionFrame, text="")
-        # self.LastQuestionNoteLabel.pack()
         self.LastQuestionLabel.pack()
         self.LastQuestionFrame.pack(pady=20)
 
@@ -94,7 +87,7 @@ class EditQuestions(tk.Frame):
 
 
     def loadQuestionsFromFile(self):
-        """Loads questions from the selected JSON file and refreshes UI."""
+        """Loads questions from the selected JSON file"""
         self.filename = self.fileNameEntry.get().strip()
         if not self.filename:
             messagebox.showerror("Error", "Please select a file!")
@@ -113,8 +106,6 @@ class EditQuestions(tk.Frame):
         except json.JSONDecodeError:
             messagebox.showerror("Error", "Invalid JSON file!")
             return
-
-        """Displays questions in framed format with Edit and Delete buttons."""
 
         # Destroy previous frame if it exists
         if hasattr(self, "questionFrame"):
@@ -188,8 +179,8 @@ class EditQuestions(tk.Frame):
 
         
     def getAllFilesFromQuestionsFolder(self):
+        """get all the files from the data/questions folder"""
         
-        #get all the files from the data/questions folder
         try:
             current_folder_path = os.path.dirname(os.path.abspath(__file__))
             folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
@@ -209,6 +200,7 @@ class EditQuestions(tk.Frame):
 
 
     def EditQuestion(self,unit,marks,bt,question):
+        """Selects the question and shows its values in the UI"""
         
         #Values to use when saving the question
         self.selected_unit = unit
@@ -227,6 +219,7 @@ class EditQuestions(tk.Frame):
         
         
     def deleteQuestions(self,unit,marks,bt,question):
+        """Deletes the question"""
 
         #If there is no question
         if not question:
@@ -271,7 +264,8 @@ class EditQuestions(tk.Frame):
         self.loadQuestionsFromFile()
 
     def saveQuestions(self):
-
+        """Saves the edited Question"""
+        
         new_unit = self.unitNumberEntry.get()
         new_marks = self.marksEntry.get()
         new_question = self.questionEntry.get("1.0", END).strip()
@@ -337,8 +331,6 @@ class EditQuestions(tk.Frame):
                     break
             if question_updated:
                 break
-
-
 
         # Insert the data into the json file
         with open(file_path, "w", encoding="utf-8") as json_file:
