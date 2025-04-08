@@ -27,7 +27,7 @@ class CreateMCQs(tk.Frame):
 
         self.unitNumberFrame = tk.Frame(self.Esstentials, bg="#f9f9f9")
         tk.Label(self.unitNumberFrame, text="Select Unit:", bg="#f9f9f9", font=("Segoe UI", 10)).grid(row=0, column=0, padx=5, pady=10)
-        self.options = ['Unit1', 'Unit2', 'Unit3', 'Unit4', 'Unit5']
+        self.options = ['unit1', 'unit2', 'unit3', 'unit4', 'unit5']
         self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.options, width=25, state="readonly")
         self.unitNumberEntry.current(0)
         self.unitNumberEntry.grid(row=0, column=1, padx=5, pady=10)
