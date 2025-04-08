@@ -146,7 +146,8 @@ class EditQuestions(tk.Frame):
 
         #If File is empty
         if not data:
-            Label(scrollable_frame, text="No questions found.", font=("Arial", 12)).pack(pady=10)
+            # Label(scrollable_frame, text="No questions found.", font=("Arial", 12)).pack(pady=10)
+            self.LastQuestionLabel.config(text="No questions found.")
             return
 
         # Display questions by unit and marks
@@ -223,9 +224,7 @@ class EditQuestions(tk.Frame):
         self.questionEntry.delete('1.0',END)
         self.questionEntry.insert('1.0',question)
 
-
-        # self.deleteQuestions(unit,marks,bt,question)
-        # print("Deleted Questions")
+        
         
     def deleteQuestions(self,unit,marks,bt,question):
 
@@ -264,21 +263,21 @@ class EditQuestions(tk.Frame):
                 # Save the updated data
                 with open(file_path, "w", encoding="utf-8") as json_file:
                     json.dump(data, json_file, indent=4)
-                print("Deleted question.")
+                self.LastQuestionLabel.config(text="Deleted Question")
             else:
-                print("Question not found.")
+                self.LastQuestionLabel.config(text="Question not found")
         else:
-            print("Unit or marks not found.")
+            self.LastQuestionLabel.config(text="Unit or marks not found")
         self.loadQuestionsFromFile()
 
     def saveQuestions(self):
-        # self.displayQuestions()
 
         new_unit = self.unitNumberEntry.get()
         new_marks = self.marksEntry.get()
         new_question = self.questionEntry.get("1.0", END).strip()
         new_bt = self.btEntry.get()
 
+        #If the question feild is empty
         if not new_question:
             self.LastQuestionLabel.config(text="Error: Please enter a question.")
             return
@@ -304,10 +303,13 @@ class EditQuestions(tk.Frame):
 
 
         # Find and update the question in the JSON structure
-        question_updated = False  # Flag to check if a question is updated
+        question_updated = False
         for old_unit, unit_data in data.items():
+
             for old_marks, questions_list in unit_data.items():
+
                 for question_entry in questions_list:
+
                     if (old_unit == self.selected_unit and
                         old_marks == self.selected_marks and
                         question_entry["question"] == self.selected_question and
@@ -337,13 +339,11 @@ class EditQuestions(tk.Frame):
                 break
 
 
-        print(data)
 
         # Insert the data into the json file
         with open(file_path, "w", encoding="utf-8") as json_file:
             json.dump(data, json_file, indent=4)
-
-            print("Editted Question")
+            self.LastQuestionLabel.config(text="Edditted Question")
 
         #Empty the values in the fields unit,marks,bt and questions
         self.unitNumberEntry.set("")
@@ -351,4 +351,5 @@ class EditQuestions(tk.Frame):
         self.btEntry.set("")
         self.questionEntry.delete('1.0',END)
 
+        #Load the questions again
         self.loadQuestionsFromFile()
