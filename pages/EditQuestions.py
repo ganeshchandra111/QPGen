@@ -26,7 +26,7 @@ class EditQuestions(tk.Frame):
         #Get sbuject files from data/questions folder
         self.allFiles = self.getAllFilesFromQuestionsFolder()   
         self.fileNameEntry = ttk.Combobox(self.fileSelectionFrame, width=20, values=self.allFiles)
-        self.filebutton = Button(self.fileSelectionFrame,text="Open File",command=self.loadQuestions)
+        self.filebutton = Button(self.fileSelectionFrame,text="Open File",command=self.loadQuestionsFromFile)
         self.filebutton.grid(row=0,column=2,padx=5,pady=10)
         self.fileNameEntry.grid(row=0, column=1, padx=5, pady=10)
         self.fileSelectionFrame.grid(row=0, column=0,columnspan=3)
@@ -93,7 +93,7 @@ class EditQuestions(tk.Frame):
 
 
 
-    def loadQuestions(self):
+    def loadQuestionsFromFile(self):
         """Loads questions from the selected JSON file and refreshes UI."""
         self.filename = self.fileNameEntry.get().strip()
         if not self.filename:
@@ -114,10 +114,6 @@ class EditQuestions(tk.Frame):
             messagebox.showerror("Error", "Invalid JSON file!")
             return
 
-        # Refresh the UI with new data
-        self.displayQuestions(data)
-
-    def displayQuestions(self, data):
         """Displays questions in framed format with Edit and Delete buttons."""
 
         # Destroy previous frame if it exists
@@ -148,6 +144,7 @@ class EditQuestions(tk.Frame):
             canvas.yview_scroll(-1 * (event.delta // 120), "units")
         canvas.bind_all("<MouseWheel>", on_mouse_scroll)
 
+        #If File is empty
         if not data:
             Label(scrollable_frame, text="No questions found.", font=("Arial", 12)).pack(pady=10)
             return
@@ -182,10 +179,10 @@ class EditQuestions(tk.Frame):
                     btnFrame.grid(row=0, column=1, rowspan=2, padx=10)
 
                     Button(btnFrame, text="Edit", width=6, 
-                        command=lambda q=question_data: self.EditQuestion(q)).pack(pady=2)
+                        command=lambda q=question_data: self.EditQuestion(q['unit'],q['marks'],q['bt'],q['question'])).pack(pady=2)
 
                     Button(btnFrame, text="DEL", width=6, 
-                        command=lambda q=question_data: self.deleteQuestions(q)).pack(pady=2)
+                        command=lambda q=question_data: self.deleteQuestions(q['unit'],q['marks'],q['bt'],q['question'])).pack(pady=2)
 
 
         
@@ -210,12 +207,14 @@ class EditQuestions(tk.Frame):
             return []
 
 
-    def EditQuestion(self,data):
+    def EditQuestion(self,unit,marks,bt,question):
         
-        unit = data['unit']
-        marks = data['marks']
-        bt = data['bt']
-        question = data['question']
+        #Values to use when saving the question
+        self.selected_unit = unit
+        self.selected_marks = marks
+        self.selected_bt = bt
+        self.selected_question = question
+
 
         #Setting the values of the Comboboxes and text to the question value we want to edit
         self.unitNumberEntry.set(unit)
@@ -223,18 +222,12 @@ class EditQuestions(tk.Frame):
         self.btEntry.set(bt)
         self.questionEntry.delete('1.0',END)
         self.questionEntry.insert('1.0',question)
-        # print(type(q))
-        # print(q)
-        self.deleteQuestions(data)
-        print("Deleted Questions")
+
+
+        # self.deleteQuestions(unit,marks,bt,question)
+        # print("Deleted Questions")
         
-    def deleteQuestions(self,q):
-        
-        #Getting values from the dictionary 'q' to delete 
-        unit = q['unit']
-        marks = q['marks']
-        bt = q['bt']
-        question = q['question']
+    def deleteQuestions(self,unit,marks,bt,question):
 
         #If there is no question
         if not question:
@@ -276,17 +269,17 @@ class EditQuestions(tk.Frame):
                 print("Question not found.")
         else:
             print("Unit or marks not found.")
-        self.loadQuestions()
+        self.loadQuestionsFromFile()
 
     def saveQuestions(self):
         # self.displayQuestions()
 
-        unit = self.unitNumberEntry.get()
-        marks = self.marksEntry.get()
-        question = self.questionEntry.get("1.0", END).strip()
-        bt = self.btEntry.get()
+        new_unit = self.unitNumberEntry.get()
+        new_marks = self.marksEntry.get()
+        new_question = self.questionEntry.get("1.0", END).strip()
+        new_bt = self.btEntry.get()
 
-        if not question:
+        if not new_question:
             self.LastQuestionLabel.config(text="Error: Please enter a question.")
             return
 
@@ -309,22 +302,42 @@ class EditQuestions(tk.Frame):
         else:
             data = {}
 
-        # Initialize unit if not present
-        if unit not in data:
-            data[unit] = {}
 
-        # Initialize marks if not present
-        if marks not in data[unit]:
-            data[unit][marks] = []
+        # Find and update the question in the JSON structure
+        question_updated = False  # Flag to check if a question is updated
+        for old_unit, unit_data in data.items():
+            for old_marks, questions_list in unit_data.items():
+                for question_entry in questions_list:
+                    if (old_unit == self.selected_unit and
+                        old_marks == self.selected_marks and
+                        question_entry["question"] == self.selected_question and
+                        question_entry["bt"] == self.selected_bt):
+                        
+                        # Update the question details
+                        question_entry["question"] = new_question
+                        question_entry["bt"] = new_bt
 
-          # Check for duplicate question
-        for entry in data[unit][marks]:
-            if entry["question"] == question:
-                self.LastQuestionLabel.config(text="Error: Duplicate question exists.")
-                return
-            
-        # Add new question
-        data[unit][marks].append({"question": question, "bt": bt})
+                        # If unit or marks are changed, move to the appropriate section
+                        if old_unit != new_unit or old_marks != new_marks:
+                            # Remove from old location
+                            questions_list.remove(question_entry)
+
+                            # Add to new location in JSON structure
+                            if new_unit not in data:
+                                data[new_unit] = {}
+                            if new_marks not in data[new_unit]:
+                                data[new_unit][new_marks] = []
+                            data[new_unit][new_marks].append(question_entry)
+                        question_updated = True
+                        break
+
+                if question_updated:
+                    break
+            if question_updated:
+                break
+
+
+        print(data)
 
         # Insert the data into the json file
         with open(file_path, "w", encoding="utf-8") as json_file:
@@ -338,4 +351,4 @@ class EditQuestions(tk.Frame):
         self.btEntry.set("")
         self.questionEntry.delete('1.0',END)
 
-        self.loadQuestions()
+        self.loadQuestionsFromFile()
