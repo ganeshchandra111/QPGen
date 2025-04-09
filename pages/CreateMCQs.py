@@ -8,97 +8,93 @@ class CreateMCQs(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
 
-        self.lable = Label(self, text=''' Here you can create MCQs This is the CreateMCQs page ''')
-        self.lable.pack(padx=10,pady=10)
+        self.configure(bg="#f9f9f9")
 
-        # this is the main frame that is there in this entire page, everything that is diplayed in this page
-        # can be found within this frame
-        self.MCQQuestionsEntryFrame = Frame(self)
+        self.label = tk.Label(self, text="Create MCQs", font=("Segoe UI", 16, "bold"), bg="#f9f9f9", fg="#333")
+        self.label.pack(padx=10, pady=20)
 
-        # Essentials meaning the filename and unit number
-        self.Esstentials = Frame(self.MCQQuestionsEntryFrame) 
+        self.MCQQuestionsEntryFrame = tk.Frame(self, bg="#f9f9f9")
 
-        # this code is the UI for the user to enter the file name, this also displayes the files that are in that folder
-        self.fileNameFrame = Frame(self.Esstentials)
-        self.fileNameLabel = Label(self.fileNameFrame,text="Select a file or create new one: ").grid(row=0, column=0,padx=5, pady=10)
+        # Essentials (File Name & Unit Number)
+        self.Esstentials = tk.Frame(self.MCQQuestionsEntryFrame, bg="#f9f9f9")
+
+        self.fileNameFrame = tk.Frame(self.Esstentials, bg="#f9f9f9")
+        tk.Label(self.fileNameFrame, text="Select or Create File:", bg="#f9f9f9", font=("Segoe UI", 10)).grid(row=0, column=0, padx=5, pady=10)
         self.AllFiles = self.getAllFilesFromMCQsFolder()
-        self.fileNameEntry = ttk.Combobox(self.fileNameFrame,width=20,values=self.AllFiles)
-        self.fileNameEntry.grid(row=0, column=1,padx=5, pady=10)
+        self.fileNameEntry = ttk.Combobox(self.fileNameFrame, width=25, values=self.AllFiles)
+        self.fileNameEntry.grid(row=0, column=1, padx=5, pady=10)
         self.fileNameFrame.grid(row=0, column=0)
 
-        # this code askes user to select the unit number
-        self.unitNumberFrame = Frame(self.Esstentials)
-        self.unitNumeberLabel = Label(self.unitNumberFrame,text="Select Unit: ").grid(row=0, column=0,padx=5, pady=10)
-        self.options=['Unit1',"unit2","unit3","unit4","unit5"]
-        self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame,values=self.options,width=20,state="readonly")
+        self.unitNumberFrame = tk.Frame(self.Esstentials, bg="#f9f9f9")
+        tk.Label(self.unitNumberFrame, text="Select Unit:", bg="#f9f9f9", font=("Segoe UI", 10)).grid(row=0, column=0, padx=5, pady=10)
+        self.options = ['unit1', 'unit2', 'unit3', 'unit4', 'unit5']
+        self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.options, width=25, state="readonly")
         self.unitNumberEntry.current(0)
-        self.unitNumberEntry.grid(row=0, column=1,padx=5, pady=10)
-        self.unitNumberFrame.grid(row=0,column=1)
-        
+        self.unitNumberEntry.grid(row=0, column=1, padx=5, pady=10)
+        self.unitNumberFrame.grid(row=0, column=1)
+
         self.Esstentials.pack()
-        
-        # This is where the questions entry start
-        self.MCQquestionFrame = Frame(self.MCQQuestionsEntryFrame,width=100)
-        self.questionEntryLable = Label(self.MCQquestionFrame,text="Enter your question: ")
-        self.questionEntry = Entry(self.MCQquestionFrame, width=100)
-        self.questionEntryLable.grid(row=0,column=0)
-        self.questionEntry.grid(row=0, column=1)
 
-        # All options frame, in this frame all the options will be located and displayed likewise
-        self.MCQOptionsFrame = Frame(self.MCQQuestionsEntryFrame,width=100)
+        # Question Entry
+        self.MCQquestionFrame = tk.Frame(self.MCQQuestionsEntryFrame, bg="#f9f9f9")
+        tk.Label(self.MCQquestionFrame, text="Enter your question:", bg="#f9f9f9", font=("Segoe UI", 10)).grid(row=0, column=0, padx=5, pady=10)
+        self.questionEntry = tk.Entry(self.MCQquestionFrame, width=80)
+        self.questionEntry.grid(row=0, column=1, padx=5, pady=10)
+        self.MCQquestionFrame.pack()
 
-        #This the frame which holds a single option1 entry box
-        self.Option1Frame = Frame(self.MCQOptionsFrame)
-        self.option1Label = Label(self.Option1Frame,text="Option-1: ").grid(row=0,column=0,padx=5,pady=10)
-        self.option1Entry = Entry(self.Option1Frame)
-        self.option1Entry.grid(row=0,column=1,padx=5,pady=10)
-        self.Option1Frame.grid(row=0,column=1)
+        # MCQ Options
+        self.MCQOptionsFrame = tk.Frame(self.MCQQuestionsEntryFrame, bg="#f9f9f9")
 
-        #This the frame which holds a single option2 entry box
-        self.Option2Frame = Frame(self.MCQOptionsFrame)
-        self.option2Label = Label(self.Option2Frame,text="Option-2: ").grid(row=0,column=0,padx=5,pady=10)
-        self.option2Entry = Entry(self.Option2Frame)
-        self.option2Entry.grid(row=0,column=1,padx=5,pady=10)
-        self.Option2Frame.grid(row=0,column=1)
+        def styled_option(frame, label_text):
+            f = tk.Frame(frame, bg="#f9f9f9")
+            tk.Label(f, text=label_text, bg="#f9f9f9", font=("Segoe UI", 10)).grid(row=0, column=0, padx=5, pady=10)
+            entry = tk.Entry(f, width=40)
+            entry.grid(row=0, column=1, padx=5, pady=10)
+            return f, entry
 
-        #This the frame which holds a single option3 entry box
-        self.Option3Frame = Frame(self.MCQOptionsFrame)
-        self.option3Label = Label(self.Option3Frame,text="Option-3: ").grid(row=0,column=0,padx=5,pady=10)
-        self.option3Entry = Entry(self.Option3Frame)
-        self.option3Entry.grid(row=0,column=1,padx=5,pady=10)
-        self.Option3Frame.grid(row=0,column=1)
+        self.Option1Frame, self.option1Entry = styled_option(self.MCQOptionsFrame, "Option-1:")
+        self.Option2Frame, self.option2Entry = styled_option(self.MCQOptionsFrame, "Option-2:")
+        self.Option3Frame, self.option3Entry = styled_option(self.MCQOptionsFrame, "Option-3:")
+        self.Option4Frame, self.option4Entry = styled_option(self.MCQOptionsFrame, "Option-4:")
 
-        #This the frame which holds a single option4 entry box
-        self.Option4Frame = Frame(self.MCQOptionsFrame)
-        self.option4Label = Label(self.Option4Frame,text="Option-4: ").grid(row=0,column=0,padx=5,pady=10)
-        self.option4Entry = Entry(self.Option4Frame)
-        self.option4Entry.grid(row=0,column=1,padx=5,pady=10)
-        self.Option4Frame.grid(row=0,column=1)
+        self.Option1Frame.grid(row=0, column=0)
+        self.Option2Frame.grid(row=0, column=1)
+        self.Option3Frame.grid(row=1, column=0)
+        self.Option4Frame.grid(row=1, column=1)
 
-        # Here are are packing and arraging the main elements 
-        self.MCQquestionFrame.pack()        
-        self.Option1Frame.grid(row=0,column=0)
-        self.Option2Frame.grid(row=0,column=1)
-        self.Option3Frame.grid(row=1,column=0)
-        self.Option4Frame.grid(row=1,column=1)
-        self.MCQOptionsFrame.pack()
+        self.MCQOptionsFrame.pack(pady=10)
 
-        #BUTTON
-        self.AddQuestion = Button(self.MCQQuestionsEntryFrame,text="Add Question",width=50, command=self.addQuestion)
-        self.AddQuestion.pack()
+        # Submit Button
+        self.AddQuestion = tk.Button(
+            self.MCQQuestionsEntryFrame,
+            text="Add Question",
+            width=50,
+            font=("Segoe UI", 10, "bold"),
+            bg="#3498db",
+            fg="white",
+            activebackground="#2980b9",
+            activeforeground="white",
+            relief="flat",
+            cursor="hand2",
+            command=self.addQuestion
+        )
+        self.AddQuestion.pack(pady=20)
 
-        # THis code handels the the text that is displyed in the bottom of the Frame, 
-        # this shows the last question that is enterd 
-        # This also shows the warning and errors if there are any 
-        self.LastQuestionAddedFrame=Frame(self.MCQQuestionsEntryFrame)
-        self.LastQuestionAddedNoteLable = Label(self.LastQuestionAddedFrame,text="When you add a quesiton that will be displayed down here\n*Note* only the latest added Question will be displayed")
-        self.LastQuestionAddedLable = Label(self.LastQuestionAddedFrame)
+        # Feedback Label
+        self.LastQuestionAddedFrame = tk.Frame(self.MCQQuestionsEntryFrame, bg="#f9f9f9")
+        self.LastQuestionAddedNoteLable = tk.Label(
+            self.LastQuestionAddedFrame,
+            text="When you add a question, it will appear below.\n*Note: Only the latest added question is shown.",
+            bg="#f9f9f9",
+            fg="#555",
+            font=("Segoe UI", 9)
+        )
+        self.LastQuestionAddedLable = tk.Label(self.LastQuestionAddedFrame, text="", bg="#f9f9f9", font=("Segoe UI", 10, "italic"), fg="green")
         self.LastQuestionAddedNoteLable.pack()
         self.LastQuestionAddedLable.pack()
         self.LastQuestionAddedFrame.pack(pady=20)
 
-        # Here the main frame of this page ends, this page holds everything that is there in this page
-        self.MCQQuestionsEntryFrame.pack()         
+        self.MCQQuestionsEntryFrame.pack()
 
     def addQuestion(self):
         # THis quesiton adds questions into the json file 
@@ -111,6 +107,7 @@ class CreateMCQs(tk.Frame):
             self.opt3 = self.option3Entry.get()
             self.opt4 = self.option4Entry.get()
 
+            # Checks if the qurestion are empty,if empty it diplays a warning, if not empty it adds the question
             if(self.question!="" or
             self.opt1!="" or
             self.opt2!="" or
@@ -166,7 +163,9 @@ class CreateMCQs(tk.Frame):
                 if selected_unit in data:
                     if any(q['question'] == self.question for q in data[selected_unit]):
                         self.LastQuestionAddedLable.config(
-                            text="This question already exists in the selected unit!"
+                            text="This question already exists in the selected unit!",
+                            fg="red"
+                            
                         )
                         return  # Stop execution if duplicate found
                     else:
@@ -183,9 +182,9 @@ class CreateMCQs(tk.Frame):
 
                 self.LastQuestionAddedLable.config(text=f'The Question you have added to file {self.fileNameEntry.get()}. In {selected_unit}\n\n\n Question: {self.question}\nOption 1: {self.opt1}\tOption 2: {self.opt2}\nOption 3: {self.opt3}\tOption 4: {self.opt4}')
             else:
-                self.LastQuestionAddedLable.config(text="You have Missed some values please Entery all values")
+                self.LastQuestionAddedLable.config(text="You have Missed some values please Entery all values",fg="red")
         except :
-                self.LastQuestionAddedLable.config(text="Something went Wrong")
+                self.LastQuestionAddedLable.config(text="Something went Wrong",fg="red")
                 
     def getAllFilesFromMCQsFolder(self):
         # This function gets all those json files that are there in that MCQs folder
@@ -200,7 +199,7 @@ class CreateMCQs(tk.Frame):
                 if f.endswith(".json"):  # Check if it's a JSON file
                     json_files.append(f[:-5])  # Remove ".json" and add to the list
 
-            print(json_files)  # Output: ['unit1', 'unit2', 'sample']
+            # print(json_files)  # Output: ['unit1', 'unit2', 'sample']
 
             return json_files
         except:
