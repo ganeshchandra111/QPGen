@@ -125,7 +125,6 @@ class GenerateQuestions(tk.Frame):
         self.fileNameEntry.grid(row=5, column=0, padx=5, pady=5)
 
     def get_all_files_from_questions_folder(self):
-        """Get all JSON files from the data/questions folder."""
         try:
             current_folder_path = os.path.dirname(os.path.abspath(__file__))
             folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
@@ -133,15 +132,12 @@ class GenerateQuestions(tk.Frame):
             if not os.path.exists(folder_path):
                 return []
 
-            return [f[:-5] for f in os.listdir(folder_path) if f.endswith(".json")]  # Remove .json extension
+            return [f[:-5] for f in os.listdir(folder_path) if f.endswith(".json")]  
         except Exception:
             return []
-
-    
-    
+        
     def generate_questions(self):
-        """Retrieve and display only '5' and '10' marks questions."""
-        self.generated_display.delete(1.0, tk.END)  
+        self.generated_display.delete(1.0, tk.END)
 
         selected_file = self.fileNameEntry.get()
 
@@ -149,7 +145,6 @@ class GenerateQuestions(tk.Frame):
             self.generated_display.insert(tk.END, "No file selected. Please choose a file.\n")
             return
 
-        # Get file path
         current_folder_path = os.path.dirname(os.path.abspath(__file__))
         folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
         file_path = os.path.join(folder_path, f"{selected_file}.json")
@@ -164,35 +159,91 @@ class GenerateQuestions(tk.Frame):
         except json.JSONDecodeError:
             self.generated_display.insert(tk.END, "Error: Invalid JSON format in the selected file.\n")
             return
+        
+        get_five_question = []
+        get_ten_question = []
+        total_question_set = []
+        
+        check_units = questions_data.items()
+        
+        if(len(check_units) < 5):
+            self.generated_display.insert(tk.END, "You have enterd Less then 5 units")
+            return
 
-        # Display questions (Only 5 and 10 Marks)
-        for unit, unit_data in questions_data.items():
-            self.generated_display.insert(tk.END, f"Unit: {unit}\n", 'header')
-            self.generated_display.insert(tk.END, "-" * 50 + "\n")
-
-            # Get only "5 Marks" and "10 Marks" questions
-            five_marks_questions = unit_data.get("5", [])
-            ten_marks_questions = unit_data.get("10", [])
-
-            # Select two "5 Marks" questions
-            if len(five_marks_questions) >= 2:
-                selected_five = random.sample(five_marks_questions, 2)
-                # self.generated_display.insert(tk.END, "5 Marks Question:\n")
-                self.generated_display.insert(tk.END, f"  a) {selected_five[0]['question']}\n")
-                self.generated_display.insert(tk.END, f"  b) {selected_five[1]['question']}\n\n")
-            elif len(five_marks_questions) == 1:
-                # self.generated_display.insert(tk.END, "5 Marks Question:\n")
-                self.generated_display.insert(tk.END, f"  a) {five_marks_questions[0]['question']}\n")
-                self.generated_display.insert(tk.END, f"  b) (Not enough questions available)\n\n")
-
-            # Select one "10 Marks" question
-            if ten_marks_questions:
-                selected_ten = random.choice(ten_marks_questions)
-                self.generated_display.insert(tk.END, f"{selected_ten['question']}\n\n")
-
-        self.generated_display.insert(tk.END, "-" * 50 + "\n")
+        if (len(check_units) > 5):
+            self.generated_display.insert(tk.END, "You have enterd more than 5 units")
+            return
         
 
+        # Main logic for Mid-I or Mid-II mode
+        question_number = 1
+        if self.ModeOFExamCombobox.get() == "SEM":
+            get_two_question = []
+            self.generated_display.insert(tk.END, f"Part - A          \n")
+            for unit, unit_data in questions_data.items():
+                two_marks_questions = unit_data.get("2", [])
+                for questions in two_marks_questions:
+                    get_two_question.append(questions["question"])
+            
+            total_two_marks_questions = 0
+            two_marks_question_number = 1
+            while total_two_marks_questions < 5:
+                index_of_two_marks = random.randint(0 , len(get_two_question) - 1)
+                final_two_marks = get_two_question[index_of_two_marks]
+                self.generated_display.insert(tk.END, f"{two_marks_question_number}  . {final_two_marks}\n")
+
+                total_two_marks_questions += 1
+                two_marks_question_number += 1
+            
+            
+            # Generating parth B questions
+            self.generated_display.insert(tk.END, f"Part - B          \n")
+            
+            for unit, unit_data in questions_data.items():
+                self.generated_display.insert(tk.END, f"Unit: {unit}\n", 'header')
+                self.generated_display.insert(tk.END, "-" * 50 + "\n")
+
+                five_marks_questions = unit_data.get("5", [])
+                ten_marks_questions = unit_data.get("10", [])
+
+                # Randomly select one 5-mark question and one 10-mark question
+                if five_marks_questions:
+                    random_five_question = random.choice(five_marks_questions)
+                    get_five_question.append(random_five_question["question"])
+
+                if ten_marks_questions:
+                    random_ten_question = random.choice(ten_marks_questions)
+                    get_ten_question.append(random_ten_question["question"])
+
+                # pairing 5 marks question
+                while len(get_five_question) > 1:
+                    a_question = random.choice(get_five_question)
+                    get_five_question.remove(a_question)
+                    b_question = random.choice(get_five_question)
+                    get_five_question.remove(b_question)
+                    total_question_set.append(f"a) {a_question}  b) {b_question}")
+
+                # Add 10-mark questions
+                for question in get_ten_question:
+                    total_question_set.append(f"{question}")
+
+                # generating questionq
+                unit_total_question = 0
+                while unit_total_question < 2:
+                    question_index = random.randint(0,len(total_question_set) - 1)
+                    random_generate_question = total_question_set[question_index]
+                    if "a) " in random_generate_question and "b)" in random_generate_question:
+                        divided_question = random_generate_question.split("b)")
+                        self.generated_display.insert(tk.END, f"  {question_number}. {divided_question[0]} \n b) {divided_question[1]} \n")
+                    else:
+                        self.generated_display.insert(tk.END, f"  {question_number}. {random_generate_question} \n")
+                    
+                    unit_total_question += 1
+                    question_number += 1
+        else:   
+            print("THIS IS FOR SEM")
+
+    
     def save_to_word(self):
         """Save the displayed questions to a Word document as a table."""
         text_content = self.generated_display.get(1.0, tk.END)
@@ -331,3 +382,6 @@ class GenerateQuestions(tk.Frame):
 
         except Exception as e:
             messagebox.showerror("Error", f"An error occurred: {e}")
+
+
+
