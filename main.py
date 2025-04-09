@@ -95,7 +95,7 @@ class QPGen:
 
         back_btn = tk.Button(
             self.sidebar,
-            text="\t🆘 Help\t",
+            text="🆘 Help",
             command=lambda: self.showPage(HelpPage),
             font=("Segoe UI", 10, "bold"),
             bg="#e74c3c",
