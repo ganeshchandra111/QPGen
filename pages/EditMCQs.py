@@ -348,6 +348,7 @@ class EditMCQs(tk.Frame):
         # Clear the entry fields after saving
         for entry in [self.EditQuestionEntry, self.option1Entry, self.option2Entry, self.option3Entry, self.option4Entry]:
             entry.delete(0, END)
+        
 
         self.selected_question = None  # Reset the selected question
         self.PrintAllTheQuestionsWithEditButton()
