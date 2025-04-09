@@ -7,83 +7,86 @@ import json, os
 class EditQuestions(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
+        self.pack(padx=20, pady=20)
 
-        self.lable = Label(self, text=''' This is the Edit Questions page ''')
-        self.lable.pack(padx=10,pady=10)
+        # Title Label
+        self.label = ttk.Label(self, text="This is the Edit Questions Page", font=("Arial", 16, "bold"))
+        self.label.pack(pady=(0, 10))
 
+        # Main Frame that contains all the other frames in the page
+        self.QuestionsEntryFrame = ttk.Frame(self)
 
-         # Main Frame that contains all the other frames in the page
-        self.QuestionsEntryFrame = Frame(self)
+        # Essentials Frame
+        self.Essentials = ttk.Frame(self.QuestionsEntryFrame)
 
-        #Defining a frame named essentials to input take essential stuff
-        #It contains frames like subject , unit , marks, cognitive level
-        self.Essentials = Frame(self.QuestionsEntryFrame)
-
-
-        # To select subject file or create a new subject file from the data/questions folder
-        self.fileSelectionFrame = Frame(self.Essentials)
-        self.fileSelectionLabel = Label(self.fileSelectionFrame, text="Select or create a Subject: ").grid(row=0, column=0, padx=5, pady=10)
-        #Get sbuject files from data/questions folder
+        # Subject File Selection Frame
+        self.fileSelectionFrame = ttk.Frame(self.Essentials)
+        ttk.Label(self.fileSelectionFrame, text="Select or create a Subject:").grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
         self.allFiles = self.getAllFilesFromQuestionsFolder()   
-        self.fileNameEntry = ttk.Combobox(self.fileSelectionFrame, width=20, values=self.allFiles)
-        self.filebutton = Button(self.fileSelectionFrame,text="Open File",command=self.loadQuestionsFromFile)
-        self.filebutton.grid(row=0,column=2,padx=5,pady=10)
-        self.fileNameEntry.grid(row=0, column=1, padx=5, pady=10)
-        self.fileSelectionFrame.grid(row=0, column=0,columnspan=3)
+        self.fileNameEntry = ttk.Combobox(self.fileSelectionFrame, width=20, values=self.allFiles, state="readonly")
+        self.filebutton = ttk.Button(self.fileSelectionFrame, text="Open File", command=self.loadQuestionsFromFile)
+        self.fileNameEntry.grid(row=0, column=1, padx=10, pady=10)
+        self.filebutton.grid(row=0, column=2, padx=10, pady=10)
+        self.fileSelectionFrame.grid(row=0, column=0, columnspan=3)
 
-        # Select unit to store it in
-        self.unitNumberFrame = Frame(self.Essentials)
-        self.unitNumeberLabel = Label(self.unitNumberFrame, text="Select Unit: ").grid(row=1, column=0, padx=5, pady=10)
+        # Unit Number Frame
+        self.unitNumberFrame = ttk.Frame(self.Essentials)
+        ttk.Label(self.unitNumberFrame, text="Select Unit:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
         self.unitOptions = [f"Unit {i}" for i in range(1, 6)]
         self.unitNumberEntry = ttk.Combobox(self.unitNumberFrame, values=self.unitOptions, width=20, state="readonly")
-        self.unitNumberEntry.grid(row=1, column=1, padx=5, pady=10)
+        self.unitNumberEntry.grid(row=1, column=1, padx=10, pady=10)
         self.unitNumberFrame.grid(row=1, column=0)
 
-        # Select the marks for the question
-        self.marksFrame = Frame(self.Essentials)
-        self.marksLabel = Label(self.marksFrame, text="Select Marks: ").grid(row=1, column=1, padx=5, pady=10)
+        # Marks Frame
+        self.marksFrame = ttk.Frame(self.Essentials)
+        ttk.Label(self.marksFrame, text="Select Marks:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
         self.marksOptions = [2, 5, 10]
         self.marksEntry = ttk.Combobox(self.marksFrame, values=self.marksOptions, width=20, state="readonly")
-        self.marksEntry.grid(row=1, column=2, padx=5, pady=10)
+        self.marksEntry.grid(row=1, column=1, padx=10, pady=10)
         self.marksFrame.grid(row=1, column=1)
 
-    
-        # Cognitive level also known as bloom taxamony to specify the question type as thing like understand,evaulate,etc 
-        self.btFrame = Frame(self.Essentials)
-        self.btLabel = Label(self.btFrame, text="Select BT: ").grid(row=1, column=2, padx=5, pady=10)
+        # Bloom's Taxonomy Frame
+        self.btFrame = ttk.Frame(self.Essentials)
+        ttk.Label(self.btFrame, text="Select BT:").grid(row=1, column=0, padx=10, pady=10, sticky=tk.W)
         self.btOptions = ["Understand", "Analyze", "Evaluate", "Remember"]
         self.btEntry = ttk.Combobox(self.btFrame, values=self.btOptions, width=20, state="readonly")
-        self.btEntry.grid(row=1, column=3, padx=5, pady=10)
-        self.btFrame.grid(row=1,column=2)
+        self.btEntry.grid(row=1, column=1, padx=10, pady=10)
+        self.btFrame.grid(row=1, column=2)
 
-        #pack essential frame as we dont need to config it further
-        self.Essentials.pack()
+        # Pack Essentials Frame
+        self.Essentials.pack(pady=10)
 
+        # Question Text Entry Frame
+        self.questionTextFrame = ttk.LabelFrame(self.QuestionsEntryFrame, text="Question Entry", padding=(10, 10))
+        ttk.Label(self.questionTextFrame, text="Enter your question:", font=("Arial", 10)).grid(row=0, column=0, padx=10, pady=10, sticky=tk.W)
+        self.questionEntry = Text(self.questionTextFrame, height=5, width=50, font=("Courier", 10))
+        self.questionEntry.grid(row=0, column=1, padx=10, pady=10)
+        self.questionTextFrame.pack(pady=10)
 
-        #Frame to load the question frame to take questions from user
-        self.questionTextFrame = Frame(self.QuestionsEntryFrame, width=100)
-        self.questionEntryLabel = Label(self.questionTextFrame, text="Enter your question:")
-        self.questionEntry = Text(self.questionTextFrame, height=2, width=50)
-        self.questionEntryLabel.grid(row=0, column=0, padx=5, pady=5)
-        self.questionEntry.grid(row=0, column=1, padx=5, pady=5)
-
-        # pack essential as have finished the ui for questions
-        self.questionTextFrame.pack()
-
-        
         # Submit Button
-        self.submitButton = Button(self.QuestionsEntryFrame, text="Edit Question", width=50, command=self.saveQuestions)
-        self.submitButton.pack(pady=20)
+        self.submitButton = tk.Button(
+            self.QuestionsEntryFrame,
+            text="Edit Question",
+            width=30,
+            font=("Segoe UI", 10, "bold"),
+            bg="#28a745",  # Green background
+            fg="white",  # White text
+            activebackground="#218838",  # Darker green for hover
+            activeforeground="white",  # White text on hover
+            relief="flat",  # Flat button design
+            cursor="hand2",  # Hand cursor on hover
+            command=self.saveQuestions
+        )
+        self.submitButton.pack(pady=(10, 20))
 
-        # To give notes and appropriate output after trying to insert data into the files
-        self.LastQuestionFrame = Frame(self.QuestionsEntryFrame)
-        self.LastQuestionLabel = Label(self.LastQuestionFrame, text="")
+        # Output Message Frame
+        self.LastQuestionFrame = ttk.LabelFrame(self.QuestionsEntryFrame, text="Output")
+        self.LastQuestionLabel = ttk.Label(self.LastQuestionFrame, text="", foreground="green")
         self.LastQuestionLabel.pack()
-        self.LastQuestionFrame.pack(pady=20)
+        self.LastQuestionFrame.pack(pady=5)
 
-        # Packing the main frame
+        # Pack Main Frame
         self.QuestionsEntryFrame.pack()
-
 
 
     def loadQuestionsFromFile(self):
