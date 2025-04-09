@@ -288,12 +288,6 @@ class GenerateMCQs(tk.Frame):
         print(len(new_question_Bank))
             
 
-
-
-        
-
-        
-
     def GetAllMCQFiles(self):
         current_folder_path = os.path.dirname(os.path.abspath(__file__))
         folder_path = os.path.join(current_folder_path, '..', 'data', 'MCQs')
