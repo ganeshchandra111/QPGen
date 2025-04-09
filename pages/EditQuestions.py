@@ -295,6 +295,14 @@ class EditQuestions(tk.Frame):
         else:
             data = {}
 
+        if (new_unit == self.selected_unit and
+            new_marks == self.selected_marks and
+            new_question == self.selected_question and
+            new_bt == self.selected_bt):
+
+            self.LastQuestionLabel.config(text="Edit the Question")
+            return
+
 
         # Find and update the question in the JSON structure
         question_updated = False
