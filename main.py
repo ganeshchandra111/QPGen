@@ -10,7 +10,8 @@ from pages.EditMCQs import EditMCQs
 from pages.GenerateMCQs import GenerateMCQs
 from pages.EditQuestions import EditQuestions
 from pages.HelpPage import HelpPage
-
+from pages.ContactUs import ContactUs
+from pages.Donations import Donations
 
 class QPGen:
 
@@ -80,8 +81,8 @@ class QPGen:
 
         # Back to main
         self.BottomButtons(self.sidebar,"⬅️ Back to Home",MainPage)
-        self.BottomButtons(self.sidebar,"📞 Contact us",None)
-        self.BottomButtons(self.sidebar,"💵 Donations",None)
+        self.BottomButtons(self.sidebar,"📞 Contact us",ContactUs)
+        self.BottomButtons(self.sidebar,"💵 Donations",Donations)
         self.BottomButtons(self.sidebar,"🆘 Help",HelpPage)
     
     def BottomButtons(self,root,text,page):
