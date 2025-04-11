@@ -6,7 +6,6 @@ import random
 from tkinter import ttk
 from docx import Document
 from tkinter import filedialog
-from docx import Document
 from docx.shared import Inches
 from tkinter import filedialog, messagebox
 
@@ -68,7 +67,7 @@ class GenerateQuestions(tk.Frame):
         Label(self, text="Branch:").grid(row=3, column=0, sticky="w")
         self.branch = Entry(self, width=10)
         self.branch.grid(row=3, column=0, )
-        
+
         Label(self, text="Date:").grid(row=4, column=0, sticky="w")
         self.date = Entry(self, width=10)
         self.date.grid(row=4, column=0, )
@@ -76,12 +75,13 @@ class GenerateQuestions(tk.Frame):
         Label(self, text="Subject:").grid(row=3, column=2, sticky="w")
         self.subject = Entry(self, width=10)
         self.subject.grid(row=3, column=3, pady=5)
+
         Label(self, text="Max Marks:").grid(row=4, column=2, sticky="w")
         self.marks = Entry(self, width=10)
         self.marks.grid(row=4, column=3, pady=5)
 
     def create_file_selection_ui(self):
-    # Frame for selecting the Mode of Examination
+        # Frame for selecting the Mode of Examination
         self.selectionFrame = Frame(self)
         self.selectionFrame.grid(row=5, column=0, padx=10, pady=20)
 
@@ -135,12 +135,11 @@ class GenerateQuestions(tk.Frame):
             return [f[:-5] for f in os.listdir(folder_path) if f.endswith(".json")]  
         except Exception:
             return []
-        
+    
     def generate_questions(self):
         self.generated_display.delete(1.0, tk.END)
 
         selected_file = self.fileNameEntry.get()
-
         if not selected_file:
             self.generated_display.insert(tk.END, "No file selected. Please choose a file.\n")
             return
@@ -159,229 +158,305 @@ class GenerateQuestions(tk.Frame):
         except json.JSONDecodeError:
             self.generated_display.insert(tk.END, "Error: Invalid JSON format in the selected file.\n")
             return
-        
-        get_five_question = []
-        get_ten_question = []
-        total_question_set = []
-        
-        check_units = questions_data.items()
-        
-        if(len(check_units) < 5):
-            self.generated_display.insert(tk.END, "You have enterd Less then 5 units")
-            return
 
-        if (len(check_units) > 5):
-            self.generated_display.insert(tk.END, "You have enterd more than 5 units")
-            return
-        
+        mode = self.ModeOFExamCombobox.get()
+        units = list(questions_data.keys())
 
-        # Main logic for Mid-I or Mid-II mode
-        question_number = 1
-        if self.ModeOFExamCombobox.get() == "SEM":
-            get_two_question = []
-            self.generated_display.insert(tk.END, f"Part - A          \n")
-            for unit, unit_data in questions_data.items():
-                two_marks_questions = unit_data.get("2", [])
-                for questions in two_marks_questions:
-                    get_two_question.append(questions["question"])
-            
-            total_two_marks_questions = 0
-            two_marks_question_number = 1
-            while total_two_marks_questions < 5:
-                index_of_two_marks = random.randint(0 , len(get_two_question) - 1)
-                final_two_marks = get_two_question[index_of_two_marks]
-                self.generated_display.insert(tk.END, f"{two_marks_question_number}  . {final_two_marks}\n")
+        if mode == "SEM":
+            if len(units) != 5:
+                self.generated_display.insert(tk.END, "SEM Mode requires exactly 5 units.\n")
+                return
 
-                total_two_marks_questions += 1
-                two_marks_question_number += 1
-            
-            
-            # Generating parth B questions
-            self.generated_display.insert(tk.END, f"Part - B          \n")
-            
-            for unit, unit_data in questions_data.items():
-                self.generated_display.insert(tk.END, f"Unit: {unit}\n", 'header')
+            # ----------- Part A (2 Marks) ------------
+            self.generated_display.insert(tk.END, f"Part - A\n")
+            self.generated_display.insert(tk.END, "1. Answer all the following questions (2 Marks Each)\n")
+
+            combined_two_mark_questions = []
+
+            for unit_data in questions_data.values():
+                unit_questions = unit_data.get("2", [])
+                if not unit_questions:
+                    continue
+                count = 2 if len(unit_questions) >= 2 else 1
+                selected = random.sample(unit_questions, count)
+                combined_two_mark_questions.extend([q['question'] for q in selected])
+
+            if len(combined_two_mark_questions) < 5:
+                self.generated_display.insert(tk.END, "Not enough 2-mark questions across units.\n")
+                return
+
+            random.shuffle(combined_two_mark_questions)
+            sub_labels = ['a)', 'b)', 'c)', 'd)', 'e)']
+            for idx in range(5):
+                self.generated_display.insert(tk.END, f"{sub_labels[idx]} {combined_two_mark_questions[idx]}\n")
+
+            # ---------- Part B ------------
+            question_number = 2
+            or_after = [1, 3, 5, 7, 9]
+
+            for unit_index, (unit, unit_data) in enumerate(questions_data.items()):
+                self.generated_display.insert(tk.END, f"\nUnit: {unit}\n", 'header')
                 self.generated_display.insert(tk.END, "-" * 50 + "\n")
 
-                five_marks_questions = unit_data.get("5", [])
-                ten_marks_questions = unit_data.get("10", [])
+                five_pool = unit_data.get("5", [])
+                ten_pool = unit_data.get("10", [])
+                unit_questions = []
 
-                # Randomly select one 5-mark question and one 10-mark question
-                if five_marks_questions:
-                    random_five_question = random.choice(five_marks_questions)
-                    get_five_question.append(random_five_question["question"])
-
-                if ten_marks_questions:
-                    random_ten_question = random.choice(ten_marks_questions)
-                    get_ten_question.append(random_ten_question["question"])
-
-                # pairing 5 marks question
-                while len(get_five_question) > 1:
-                    a_question = random.choice(get_five_question)
-                    get_five_question.remove(a_question)
-                    b_question = random.choice(get_five_question)
-                    get_five_question.remove(b_question)
-                    total_question_set.append(f"a) {a_question}  b) {b_question}")
-
-                # Add 10-mark questions
-                for question in get_ten_question:
-                    total_question_set.append(f"{question}")
-
-                # generating questionq
-                unit_total_question = 0
-                while unit_total_question < 2:
-                    question_index = random.randint(0,len(total_question_set) - 1)
-                    random_generate_question = total_question_set[question_index]
-                    if "a) " in random_generate_question and "b)" in random_generate_question:
-                        divided_question = random_generate_question.split("b)")
-                        self.generated_display.insert(tk.END, f"  {question_number}. {divided_question[0]} \n b) {divided_question[1]} \n")
+                # Randomly choose between paired 5-mark or 10-mark question for the first question
+                if five_pool and ten_pool:
+                    first_question_type = random.choice([5, 10])
+                    if first_question_type == 5:
+                        # Select a paired 5-mark question (a + b)
+                        pair = random.sample(five_pool, 2)
+                        combined = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
+                        unit_questions.append(combined)
                     else:
-                        self.generated_display.insert(tk.END, f"  {question_number}. {random_generate_question} \n")
-                    
-                    unit_total_question += 1
-                    question_number += 1
-        else:   
-            print("THIS IS FOR SEM")
+                        # Select a 10-mark question
+                        unit_questions.append(random.choice(ten_pool)['question'])
+                elif five_pool:
+                    # Only 5-mark questions available
+                    pair = random.sample(five_pool, 2)
+                    combined = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
+                    unit_questions.append(combined)
+                elif ten_pool:
+                    # Only 10-mark questions available
+                    unit_questions.append(random.choice(ten_pool)['question'])
 
-    
+                # Randomly select the second question (either 5-mark or 10-mark)
+                if len(unit_questions) < 1:
+                    continue  # Skip if we can't select the first question
+
+                if len(unit_questions) < 2:
+                    if five_pool:
+                        pair = random.sample(five_pool, 2)
+                        combined = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
+                        unit_questions.append(combined)
+                    elif ten_pool:
+                        unit_questions.append(random.choice(ten_pool)['question'])
+
+                if len(unit_questions) < 2:
+                    self.generated_display.insert(tk.END, "Not enough questions in this unit.\n")
+                    continue
+
+                selected = random.sample(unit_questions, 2)
+                for q in selected:
+                    self.generated_display.insert(tk.END, f"{question_number}. {q}\n\n")
+                    if question_number in or_after:
+                        self.generated_display.insert(tk.END, "                               or           \n\n")
+                    question_number += 1
+
+        elif mode in ["Mid-I", "Mid-II"]:
+            if len(units) not in [2, 3]:
+                self.generated_display.insert(tk.END, "Mid exam requires 2 or 3 units.\n")
+                return
+            
+            check_units = questions_data.items()
+            # Make sure there are at least 2 or 3 units
+            num_units = len(check_units)
+ 
+            unit_names = list(questions_data.keys())
+            question_number = 1
+            unit_distribution = []
+
+            if num_units == 2:
+                unit_distribution = [unit_names[0]] * 2 + [unit_names[1]] * 2 + random.choices(unit_names, k=2)
+            elif num_units == 3:
+                unit_distribution = [unit_names[0]] * 2 + [unit_names[1]] * 2 + [unit_names[2]] * 2
+
+            self.generated_display.insert(tk.END, f"Part - B\n")
+
+            for idx, unit in enumerate(unit_distribution):
+                unit_data = questions_data.get(unit, {})
+                five_mark_pool = unit_data.get("5", [])
+                ten_mark_pool = unit_data.get("10", [])
+
+                unit_questions = []
+
+                # Create paired 5-mark question
+                if len(five_mark_pool) >= 2:
+                    pair = random.sample(five_mark_pool, 2)
+                    combined_5marks = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
+                    unit_questions.append(combined_5marks)
+                elif len(five_mark_pool) == 1:
+                    unit_questions.append(f"Only one 5-mark question available: {five_mark_pool[0]['question']}")
+
+                # Pick one 10-mark question
+                if len(ten_mark_pool) >= 1:
+                    ten_q = random.choice(ten_mark_pool)
+                    unit_questions.append(ten_q["question"])
+
+                if len(unit_questions) < 1:
+                    self.generated_display.insert(tk.END, f"Unit {unit}: Not enough questions available.\n")
+                    continue
+
+                selected = random.choice(unit_questions)
+                self.generated_display.insert(tk.END, f"{question_number}. {selected}\n\n")
+
+                # Add "or" after 1st, 3rd, and 4th questions
+                if question_number in [1, 3, 5]:
+                    self.generated_display.insert(tk.END, f"{' ' * 40}or\n\n")
+
+                question_number += 1
+
+   
     def save_to_word(self):
-        """Save the displayed questions to a Word document as a table."""
         text_content = self.generated_display.get(1.0, tk.END)
 
         if text_content.strip() == "":
             messagebox.showwarning("No Content", "There are no generated questions to save.")
             return
 
+        # Exam metadata
         current_folder = os.path.dirname(os.path.abspath(__file__))
-        json_file_path = os.path.join(current_folder, "..", "data")
-
-        if not os.path.exists(json_file_path):
-                os.makedirs(json_file_path)
-
-        file_path = os.path.join(json_file_path, 'collegeName.json')
-
-            # Load College Name from JSON safely
-        get_college_name = "Default College"
-        if os.path.exists(file_path):
+        json_file_path = os.path.join(current_folder, "..", "data", "collegeName.json")
+        college_name = "Default College"
+        if os.path.exists(json_file_path):
             try:
-                    with open(file_path, "r") as file:
-                        data = json.load(file)
-                        get_college_name = data.get("CollegeName", "Default College")
+                with open(json_file_path, "r") as file:
+                    data = json.load(file)
+                    college_name = data.get("CollegeName", "Default College")
             except json.JSONDecodeError:
-                    print("Error: Invalid JSON format. Using default college name.")
-            
-        college_name = get_college_name  
+                print("Invalid JSON. Using default college name.")
+
         year = self.year.get()
         semester = self.semester.get()
         branch = self.branch.get()
         subject = self.subject.get()
         date = self.date.get()
         marks = self.marks.get()
-        ModeOFExamCombobox = self.ModeOFExamCombobox.get()
-        if not all([college_name, year, semester, branch, subject , marks , date , ModeOFExamCombobox]):
+        mode = self.ModeOFExamCombobox.get()
+
+        if not all([year, semester, branch, subject, date, marks, mode]):
             messagebox.showwarning("Missing Information", "Please fill in all the details before saving.")
             return
 
-        # Ask for save location
         save_file_path = filedialog.asksaveasfilename(
-            title="Save Generated Question Paper",
+            title="Save Question Paper",
             defaultextension=".docx",
-            filetypes=(("Word Documents", "*.docx"), ("All Files", "*.*")))
+            filetypes=[("Word Documents", "*.docx")]
+        )
 
         if not save_file_path:
-            # print("Save file path is None, operation canceled.")
             return
 
         try:
             doc = Document()
 
-            current_folder_path = os.path.dirname(os.path.abspath(__file__))
-            logo_path = os.path.join(current_folder_path, "..", "utils", "Gpcet_logo.png")
-
-            # Check if the image exists at the specified location
+            # Add logo
+            logo_path = os.path.join(current_folder, "..", "utils", "Gpcet_logo.png")
             if os.path.exists(logo_path):
-                
                 doc.add_picture(logo_path, width=Inches(1))
-            else:
-                messagebox.showerror("Error", f"Logo image not found at: {logo_path}")
-                return
 
-            # Add the college name and exam details as header
-            title_paragraph = doc.add_paragraph()
-            title_paragraph.alignment = 1  # Center align the paragraph
-            title_paragraph.add_run(college_name + "\n").bold = True
-            title_paragraph.add_run("(Autonomous)"+ "\n").bold = True
-            title_paragraph.add_run(f"Year: {year} | Semester: {semester} | {ModeOFExamCombobox}\n")
-            sub_title = doc.add_paragraph()
-            sub_title.add_run(f"Branch: {branch}                                                                           Date : {date}\n")
-            sub_title.add_run(f"Subject: {subject}                                                               \t\t           Max Marks: {marks}")
+            # Header
+            title = doc.add_paragraph()
+            title.alignment = 1
+            title.add_run(college_name + "\n").bold = True
+            title.add_run("(Autonomous)\n").bold = True
+            title.add_run(f"Year: {year} | Semester: {semester} | {mode}\n")
 
-            doc.add_paragraph('-' * 100)  # Add a separator
+            details = doc.add_paragraph()
+            details.add_run(f"Branch: {branch}                                                                       Date: {date}\n")
+            details.add_run(f"Subject: {subject}                                                                     Max Marks: {marks}\n")
 
-            # Add a table with headers
-            table = doc.add_table(rows=1, cols=4)
-            table.style = 'Table Grid'
-            hdr_cells = table.rows[0].cells
-            hdr_cells[0].text = "Question"
-            hdr_cells[1].text = "Marks"
-            hdr_cells[2].text = "CO"
-            hdr_cells[3].text = "Cognitive Level"
-            
-            table.columns[0].width = Inches(4)
-            # table.columns[1].width = Inches(1)
-            hdr_cells[1].width = Inches(1)
-            table.columns[2].width = Inches(1)
-            table.columns[3].width = Inches(1)
-            # for i in range(1, 4): 
-            #     for cell in table.columns[i].cells:
-            #         cell.width = Inches(1) 
+            doc.add_paragraph('-' * 100)
 
-            selected_file = self.fileNameEntry.get()
-            if not selected_file:
-                messagebox.showwarning("No File Selected", "Please select a file to save.")
-                return
+            # Process content
+            lines = text_content.strip().split("\n")
+            in_part_b = False
+            in_part_a_sub = False
+            table = None
+            part_a_text = []
+            question_number = 1
 
-            folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
-            file_path = os.path.join(folder_path, f"{selected_file}.json")
-            
-            # print(f"Attempting to open file: {file_path}")
+            for i, line in enumerate(lines):
+                stripped = line.strip()
 
-            if not os.path.exists(file_path):
-                self.generated_display.insert(tk.END, "Selected file does not exist.\n")
-                return
+                if "Part - A" in stripped:
+                    doc.add_paragraph("\nPart - A", style="Heading 2")
+                    in_part_b = False
+                    in_part_a_sub = False
+                    continue
 
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    questions_data = json.load(f)
-            except json.JSONDecodeError:
-                self.generated_display.insert(tk.END, "Error: Invalid JSON format in the selected file.\n")
-                return
+                elif "Part - B" in stripped:
+                    # Output Part A grouped under Q1
+                    if part_a_text:
+                        doc.add_paragraph(part_a_text[0], style="List Number")
+                        for sub in part_a_text[1:]:
+                            doc.add_paragraph(sub, style="List Bullet")
+                    part_a_text = []
 
-            for unit, unit_data in questions_data.items():
-                # Process 5 marks questions
-                five_marks_questions = unit_data.get("5", [])
-                for q in five_marks_questions:
-                    row_cells = table.add_row().cells
-                    row_cells[0].text = q.get('question', '')
-                    row_cells[1].text = "5 Marks"
-                    row_cells[3].text = q.get('bt' , '')
+                    doc.add_paragraph("\nPart - B", style="Heading 2")
+                    in_part_b = True
+                    table = doc.add_table(rows=1, cols=4)
+                    table.style = 'Table Grid'
+                    hdr_cells = table.rows[0].cells
+                    hdr_cells[0].text = "Question"
+                    hdr_cells[1].text = "Marks"
+                    hdr_cells[2].text = "BT"
+                    hdr_cells[3].text = "CO"
+                    continue
 
-                # Process 10 marks questions
-                ten_marks_questions = unit_data.get("10", [])
-                for q in ten_marks_questions:
-                    row_cells = table.add_row().cells
-                    row_cells[0].text = q.get('question', '')
-                    row_cells[1].text = "10 Marks"
-                    row_cells[3].text = q.get('bt' , '')
-                    
+                elif stripped.startswith("1. Answer all the following"):
+                    # Collect Part A intro line
+                    part_a_text.append(stripped)
+                    in_part_a_sub = True
+                    continue
 
-            # Save the document
-            # print(f"Saving document to: {save_file_path}")
+                elif in_part_a_sub and stripped[:2] in ['a)', 'b)', 'c)', 'd)', 'e)']:
+                    part_a_text.append(stripped)
+                    continue
+
+                elif stripped.startswith("Unit:"):
+                    doc.add_paragraph(stripped, style="Heading 3")
+
+                elif in_part_b and stripped and stripped[0].isdigit() and "." in stripped:
+                    # It's a question in Part B
+                    q_num, q_text = stripped.split(".", 1)
+
+                    # Detect marks type
+                    if "a)" in q_text and "b)" in q_text:
+                        marks = "5 + 5"
+                    elif "Only one" in q_text:
+                        marks = "5"
+                    else:
+                        marks = "10"
+
+                    # Extract BT level if present
+                    bt_value = ""
+                    if "Understand" in q_text:
+                        bt_value = "Understand"
+                    elif "Analyze" in q_text:
+                        bt_value = "Analyze"
+                    elif "Create" in q_text:
+                        bt_value = "Create"
+                    elif "Remember" in q_text:
+                        bt_value = "Remember"
+
+                    row = table.add_row().cells
+                    row[0].text = q_text.strip()
+                    row[1].text = marks
+                    row[2].text = bt_value
+                    row[3].text = ""  # CO left empty
+
+                elif "or" in stripped.lower() and in_part_b:
+                    # Add "or" as a merged and centered row in the table
+                    or_row = table.add_row().cells
+                    merged_cell = or_row[0].merge(or_row[1]).merge(or_row[2]).merge(or_row[3])
+                    merged_cell.text = "or"
+                    merged_cell.paragraphs[0].alignment = 1
+
+                elif not in_part_b and not in_part_a_sub:
+                    # General line outside parts
+                    doc.add_paragraph(stripped)
+
+            # Output Part A if not already written
+            # if part_a_text:
+            #     doc.add_paragraph(part_a_text[0], style="List Number")
+            #     for sub in part_a_text[1:]:
+            #         doc.add_paragraph(sub, style="List Bullet")
+
             doc.save(save_file_path)
-            messagebox.showinfo("Saved", f"Questions saved to Word document at {save_file_path}")
+            messagebox.showinfo("Saved", f"Document saved at:\n{save_file_path}")
 
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred: {e}")
-
-
-
+            messagebox.showerror("Error", f"An error occurred:\n{e}")
