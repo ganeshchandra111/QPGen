@@ -10,7 +10,8 @@ from pages.EditMCQs import EditMCQs
 from pages.GenerateMCQs import GenerateMCQs
 from pages.EditQuestions import EditQuestions
 from pages.HelpPage import HelpPage
-
+from pages.ContactUs import ContactUs
+from pages.Donations import Donations
 
 class QPGen:
 
@@ -79,10 +80,16 @@ class QPGen:
         # self.PageNavigationBtn(self.sidebar, HelpPage, "🆘 Help")
 
         # Back to main
+        self.BottomButtons(self.sidebar,"⬅️ Back to Home",MainPage)
+        self.BottomButtons(self.sidebar,"📞 Contact us",ContactUs)
+        self.BottomButtons(self.sidebar,"💵 Donations",Donations)
+        self.BottomButtons(self.sidebar,"🆘 Help",HelpPage)
+    
+    def BottomButtons(self,root,text,page):
         back_btn = tk.Button(
-            self.sidebar,
-            text="⬅️ Back to Home",
-            command=lambda: self.showPage(MainPage),
+            root,
+            text=text,
+            command=lambda: self.showPage(page),
             font=("Segoe UI", 10, "bold"),
             bg="#e74c3c",
             fg="white",
@@ -91,21 +98,7 @@ class QPGen:
             relief="flat",
             bd=0
         )
-        back_btn.pack(side="bottom", fill="x", padx=10, pady=20)
-
-        back_btn = tk.Button(
-            self.sidebar,
-            text="\t🆘 Help\t",
-            command=lambda: self.showPage(HelpPage),
-            font=("Segoe UI", 10, "bold"),
-            bg="#e74c3c",
-            fg="white",
-            activebackground="#c0392b",
-            activeforeground="white",
-            relief="flat",
-            bd=0
-        )
-        back_btn.pack(side="bottom", fill="x", padx=10, pady=1)
+        back_btn.pack(side="bottom", fill="x", padx=10, pady=5)
 
     def run(self):
         self.root.mainloop()
