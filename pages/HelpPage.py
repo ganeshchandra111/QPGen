@@ -27,7 +27,10 @@ class HelpPage(tk.Frame):
 
         # Add scroll with mouse wheel
         def on_mouse_scroll(event):
-            canvas.yview_scroll(-1 * (event.delta // 120), "units")
+            try:
+                canvas.yview_scroll(-1 * (event.delta // 120), "units")
+            except:
+                pass
         canvas.bind_all("<MouseWheel>", on_mouse_scroll)
 
         # Create Questions Frame
@@ -43,7 +46,7 @@ class HelpPage(tk.Frame):
         ,justify='left', font=("Arial", 10))
 
         self.createQuestionsHeadingLabel.grid(row=0, column=0, sticky='w', padx=10, pady=5)
-        self.createQuestionsLabel.grid(row=1, column=0, sticky='w', padx=10)
+        self.createQuestionsLabel.grid(row=1, column=0, sticky='w', padx=11)
 
         self.createQuestionsFrame.pack(fill='x', pady=10)
 
@@ -52,12 +55,19 @@ class HelpPage(tk.Frame):
 
         self.genQuestionsHeadingLabel = Label(self.genQuestionsFrame, text="Generate Questions", font=("Arial", 13, "bold"))
         self.genQuesitonsLabel = Label(self.genQuestionsFrame, text=
-        "1.In the Generate Page " \
+        "1.In the Generate Page You need the enter the nessecary details like Year,Semester,Branch,Subject,Date,Max Marks \n" \
+        "2.After that you need Select the mode of exam (Mid,Sem) from the drop box menu \n" \
+        "3.Now select the subject file from the select file from the drop box menu \n" \
+        "4.Click on the generate questions to generate questions for the particular exam (mid,sem) \n" \
+        "5.If you are want to make changes to the generated questions \n" \
+        "6.You can edit the questions there itself but it will not save the changes to the data in the file \n" \
+        "7.Click the save to word button if you are satisfied with the generated questions \n" \
+        "8.Select the destination of where you want to save the file in \n" \
         ""
-        , font=("Arial", 10))
+        ,justify='left', font=("Arial", 10))
 
         self.genQuestionsHeadingLabel.grid(row=0, column=0, sticky='w', padx=10, pady=5)
-        self.genQuesitonsLabel.grid(row=1, column=0, sticky='w', padx=10)
+        self.genQuesitonsLabel.grid(row=1, column=0, sticky='w', padx=11)
 
         self.genQuestionsFrame.pack(fill='x', pady=10)
 
@@ -77,7 +87,7 @@ class HelpPage(tk.Frame):
         ,justify='left',font=("Arial",10))
 
         self.editQuestionsHeadingLabel.grid(row=0,column=0,sticky='w',padx=10,pady=10)
-        self.editQuestionsLabel.grid(row=1,column=0,sticky='w',padx=10)
+        self.editQuestionsLabel.grid(row=1,column=0,sticky='w',padx=11)
 
         self.editQuestionsFrame.pack(fill='x', pady=10)
 
@@ -94,7 +104,7 @@ class HelpPage(tk.Frame):
         ,justify='left',font=("Arial",10))
 
         self.createMCQHeadingLabel.grid(row=0,column=0,sticky='w',padx=10,pady=10)
-        self.createMCQLabel.grid(row=1,column=0,sticky='w',padx=10)
+        self.createMCQLabel.grid(row=1,column=0,sticky='w',padx=11)
 
         self.createMCQFrame.pack(fill='x', pady=10)
 
@@ -110,11 +120,12 @@ class HelpPage(tk.Frame):
         "5.You can edit the questions there itself but it will not save the changes to the data in the file \n" \
         "6.Click the save to word button if you are satisfied with the generated questions \n" \
         "7.Select the destination of where you want to save the file in \n" \
-        "8.Check the saved file to see all the four sets of MCQs in the file"
+        "8.Check the saved file to see all the four sets of MCQs in the file \n" \
+        "9.You can also create a question bank by adding some extra questions to the generated questions by clicking the create question bank button \n    and save it into a word doucment in the specified path \n"
         ,justify='left',font=("Arial",10))
 
         self.genMCQHeadingLabel.grid(row=0,column=0,sticky='w',padx=10,pady=10)
-        self.genMCQLabel.grid(row=1,column=0,sticky='w',padx=10)
+        self.genMCQLabel.grid(row=1,column=0,sticky='w',padx=11)
 
         self.genMCQFrame.pack(fill='x', pady=10)
 
@@ -134,12 +145,11 @@ class HelpPage(tk.Frame):
         ,justify='left',font=("Arial",10))
 
         self.editMCQHeadingLabel.grid(row=0,column=0,sticky='w',padx=10,pady=10)
-        self.editMCQLabel.grid(row=1,column=0,sticky='w',padx=10)
+        self.editMCQLabel.grid(row=1,column=0,sticky='w',padx=11)
 
         self.editMCQFrame.pack(fill='x', pady=10)
 
         self.canvasFrame.pack(side='left',anchor='n',fill='both',expand=True)
         
-
 
 

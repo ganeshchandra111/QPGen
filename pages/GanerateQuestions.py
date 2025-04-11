@@ -1,6 +1,5 @@
 from tkinter import *
 import tkinter as tk
-<<<<<<< HEAD
 import json
 import os
 import random
@@ -9,12 +8,6 @@ from docx import Document
 from tkinter import filedialog
 from docx.shared import Inches
 from tkinter import filedialog, messagebox
-=======
-import os,json
-from tkinter import ttk
-import random
-
->>>>>>> cc57898089c2e4e672f08821716d2053dfd17ab6
 
 class GenerateQuestions(tk.Frame):
     def __init__(self, parentRoot):
