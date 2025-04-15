@@ -1,5 +1,6 @@
 import tkinter as tk
-from PIL import Image, ImageTk  # Ensure you have Pillow installed: pip install pillow
+import webbrowser  # To open Razorpay links in the browser
+
 
 class Donations(tk.Frame):
     def __init__(self, parentRoot):
@@ -7,30 +8,41 @@ class Donations(tk.Frame):
 
         self.configure(bg="#f9f9f9")  # Light grey background
 
-        # Title Label
+        # Persuasive Text Label
         self.title_label = tk.Label(
             self,
-            text="Support Us - Scan to Donate",
-            font=("Arial", 20, "bold"),
+            text=(
+                "🌟 Be a Part of Something Bigger! 🌟\n\n"
+                "Your donation is more than just financial support—it's an investment in a future brimming with "
+                "possibilities. Together, we can create tools and solutions that impact lives and drive change.\n\n"
+                "Every step forward is powered by your generosity. Whether it's a small gesture or a big contribution, "
+                "you are helping us lay the foundation for innovation and growth.\n\n"
+                "Click below to join our journey and leave your legacy. The future starts here!"
+            ),
+            font=("Arial", 14),
             bg="#f9f9f9",
-            fg="#333333"  # Dark grey text
+            fg="#333333",  # Dark grey text
+            wraplength=500,
+            justify="center"
         )
         self.title_label.pack(pady=20)
 
-        # QR Code Image
-        self.qr_image = Image.open("D:/_PROJECTS/QPGen/QPGen/utils/QR.jpg")
-        self.qr_image = self.qr_image.resize((300, 300))  # Resize to fit the frame
-        self.qr_photo = ImageTk.PhotoImage(self.qr_image)
-
-        self.qr_label = tk.Label(self, image=self.qr_photo, bg="#f9f9f9")
-        self.qr_label.pack(pady=20)
-
-        # Instruction Label
-        self.instruction_label = tk.Label(
+        # Donate Now Button
+        self.donate_button = tk.Button(
             self,
-            text="Scan the QR code with your PhonePe app to donate.",
-            font=("Arial", 12),
-            bg="#f9f9f9",
-            fg="#555555"  # Medium grey text
+            text="Donate Now",
+            font=("Arial", 14, "bold"),
+            bg="#28a745",  # Green background
+            fg="white",  # White text
+            relief="raised",
+            cursor="hand2",
+            command=self.open_razorpay_link
         )
-        self.instruction_label.pack(pady=10)
+        self.donate_button.pack(pady=20, ipadx=20, ipady=10)
+
+    def open_razorpay_link(self):
+        """
+        Opens the Razorpay payment page.
+        """
+        razorpay_base_url = "https://razorpay.me/@wowfour"  # Replace with your Razorpay payment link
+        webbrowser.open(razorpay_base_url)
