@@ -1,6 +1,5 @@
-import webbrowser
-from tkinter import *
 import tkinter as tk
+import webbrowser  # To open Razorpay links in the browser
 
 
 class Donations(tk.Frame):
@@ -9,98 +8,41 @@ class Donations(tk.Frame):
 
         self.configure(bg="#f9f9f9")  # Light grey background
 
-        # Title Label
-        self.title_label = Label(
+        # Persuasive Text Label
+        self.title_label = tk.Label(
             self,
-            text="Support Us - Donations Page",
-            font=("Arial", 20, "bold"),
+            text=(
+                "🌟 Be a Part of Something Bigger! 🌟\n\n"
+                "Your donation is more than just financial support—it's an investment in a future brimming with "
+                "possibilities. Together, we can create tools and solutions that impact lives and drive change.\n\n"
+                "Every step forward is powered by your generosity. Whether it's a small gesture or a big contribution, "
+                "you are helping us lay the foundation for innovation and growth.\n\n"
+                "Click below to join our journey and leave your legacy. The future starts here!"
+            ),
+            font=("Arial", 14),
             bg="#f9f9f9",
-            fg="#333333"  # Dark grey text
+            fg="#333333",  # Dark grey text
+            wraplength=500,
+            justify="center"
         )
         self.title_label.pack(pady=20)
 
-        # Description Label
-        self.desc_label = Label(
+        # Donate Now Button
+        self.donate_button = tk.Button(
             self,
-            text="Your support helps us keep going! Donate securely using Razorpay or share your details via Google Form.",
-            font=("Arial", 12),
-            bg="#f9f9f9",
-            fg="#555555",  # Medium grey text
-            wraplength=450,
-            justify="center"
-        )
-        self.desc_label.pack(pady=10)
-
-        # Razorpay Donate Button
-        self.razorpay_button = Button(
-            self,
-            text="Donate with Razorpay",
+            text="Donate Now",
             font=("Arial", 14, "bold"),
-            bg="#2a9d8f",  # Teal green
-            fg="white",
+            bg="#28a745",  # Green background
+            fg="white",  # White text
             relief="raised",
             cursor="hand2",
             command=self.open_razorpay_link
         )
-        self.razorpay_button.pack(pady=15, ipadx=10, ipady=5)
+        self.donate_button.pack(pady=20, ipadx=20, ipady=10)
 
-        # Google Form Button
-        self.google_form_button = Button(
-            self,
-            text="Fill Google Form",
-            font=("Arial", 14, "bold"),
-            bg="#264653",  # Deep greenish-blue
-            fg="white",
-            relief="raised",
-            cursor="hand2",
-            command=self.open_google_form
-        )
-        self.google_form_button.pack(pady=15, ipadx=10, ipady=5)
-
-        # Suggested Donation Amounts Label
-        self.donation_label = Label(
-            self,
-            text="Suggested Donation Amounts:",
-            font=("Arial", 14, "bold"),
-            bg="#f9f9f9",
-            fg="#333333"
-        )
-        self.donation_label.pack(pady=20)
-
-        # Donation Buttons Frame
-        donation_frame = Frame(self, bg="#f9f9f9")
-        donation_frame.pack(pady=10)
-
-        # Suggested Donation Buttons
-        prices = [50, 100, 250, 500, 1000]
-        for price in prices:
-            btn = Button(
-                donation_frame,
-                text=f"₹ {price}",
-                font=("Arial", 12),
-                bg="#457b9d",  # Muted blue
-                fg="white",
-                # relief="raised",
-                cursor="hand2",
-                command=lambda p=price: self.open_razorpay_link(p)
-            )
-            btn.pack(side=LEFT, padx=10, pady=5, ipadx=5, ipady=5)
-
-    def open_razorpay_link(self, amount=None):
+    def open_razorpay_link(self):
         """
-        Opens the Razorpay payment link.
-        Optionally appends the donation amount if provided.
+        Opens the Razorpay payment page.
         """
-        base_url = "https://rzp.io/l/YOUR_RAZORPAY_LINK"  # Replace with your Razorpay link
-        if amount:
-            webbrowser.open(f"{base_url}?amount={amount*100}")  # Razorpay amount is in paise
-        else:
-            webbrowser.open(base_url)
-
-    def open_google_form(self):
-        """
-        Opens the Google Form link in the browser.
-        """
-        google_form_url = "https://forms.gle/YOUR_GOOGLE_FORM_LINK"  # Replace with your Google Form link
-        webbrowser.open(google_form_url)
-
+        razorpay_base_url = "https://razorpay.me/@wowfour"  # Replace with your Razorpay payment link
+        webbrowser.open(razorpay_base_url)
