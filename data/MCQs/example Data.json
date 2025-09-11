@@ -71,6 +71,15 @@
             "option4": "d"
         }
     ],
+<<<<<<< HEAD
+    "unit1": [
+        {
+            "question": "this is antoher question i added",
+            "option1": "option a",
+            "option2": "optionb ",
+            "option3": "option c",
+            "option4": "option d"
+=======
     "unit3": [
         {
             "question": "qes1",
@@ -78,6 +87,7 @@
             "option2": "hbu",
             "option3": "gygb",
             "option4": "ybuh"
+>>>>>>> cc57898089c2e4e672f08821716d2053dfd17ab6
         }
     ]
 }

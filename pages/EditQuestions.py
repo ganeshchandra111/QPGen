@@ -118,67 +118,77 @@ class EditQuestions(tk.Frame):
         self.questionFrame = Frame(self)
         self.questionFrame.pack(fill=BOTH, expand=True, padx=10, pady=10)
 
-        # Create canvas and scrollbar for scrollable content
-        canvas = Canvas(self.questionFrame, height=400)
+
+        # Create a scrollable frame for questions
+        canvas = Canvas(self.questionFrame, height=400, width=500)
         scrollbar = Scrollbar(self.questionFrame, orient="vertical", command=canvas.yview)
         scrollable_frame = Frame(canvas)
 
         scrollable_frame.bind(
             "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
         )
         canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
         canvas.configure(yscrollcommand=scrollbar.set)
 
-        canvas.pack(side=LEFT, fill=BOTH, expand=True)
-        scrollbar.pack(side=RIGHT, fill=Y)
-
-        # Add scroll with mouse wheel
+        # Bind mouse wheel scrolling
         def on_mouse_scroll(event):
             canvas.yview_scroll(-1 * (event.delta // 120), "units")
         canvas.bind_all("<MouseWheel>", on_mouse_scroll)
+        canvas.bind_all("<Button-4>", lambda e: canvas.yview_scroll(-1, "units"))
+        canvas.bind_all("<Button-5>", lambda e: canvas.yview_scroll(1, "units"))
 
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
         #If File is empty
         if not data:
             # Label(scrollable_frame, text="No questions found.", font=("Arial", 12)).pack(pady=10)
             self.LastQuestionLabel.config(text="No questions found.")
             return
 
-        # Display questions by unit and marks
         for unit, marks_data in data.items():
-            unitFrame = Frame(scrollable_frame)
-            unitFrame.pack(fill="x", padx=10, pady=10)
+                unitFrame = Frame(scrollable_frame)
+                unitFrame.pack(fill="x", padx=10, pady=10)
 
-            Label(unitFrame, text=f'📘 Unit: {unit}', font=("Arial", 12, "bold")).pack(pady=5)
+                # Unit label (updated for consistency with the other UI)
+                Label(unitFrame, text=f'📘 Unit: {unit}', font=("Arial", 12, "bold")).pack(pady=5)
 
-            for marks, questions in marks_data.items():
-                Label(unitFrame, text=f'   📝 {marks} Marks', font=("Arial", 11, "italic")).pack(anchor="w")
+                for marks, questions in marks_data.items():
+                    # Marks label with slight modification for consistency
+                    Label(unitFrame, text=f'   📝 {marks} Marks', font=("Arial", 11, "italic")).pack(anchor="w")
 
-                for index, q in enumerate(questions, 1):
-                    #Loading the unit and marks into dictionary
-                    question_data = q.copy()
-                    question_data['unit'] = unit
-                    question_data['marks'] = marks
+                    for index, q in enumerate(questions, 1):
+                        # Prepare data for the buttons
+                        question_data = q.copy()
+                        question_data['unit'] = unit
+                        question_data['marks'] = marks
 
-                    question_text = q.get("question")
-                    bt = q.get("bt")
+                        question_text = q.get("question")
+                        bt = q.get("bt")
 
-                    questionFrame = Frame(unitFrame, relief="groove", borderwidth=2)
-                    questionFrame.pack(fill="x", pady=5, padx=10)
+                        # Frame for each question
+                        questionFrame = Frame(unitFrame, relief="groove", borderwidth=2)
+                        questionFrame.pack(fill="x", pady=5, padx=10)
 
-                    Label(questionFrame, text=f"{index}. {question_text}", font=("Arial", 10, "bold"), wraplength=400, justify="left").grid(row=0, column=0, sticky="w", padx=5, pady=5)
+                        # Question label with the updated UI style
+                        Label(questionFrame, text=f"{index}. {question_text}", font=("Arial", 10, "bold"), wraplength=400, justify="left").grid(row=0, column=0, sticky="w", padx=5, pady=5)
 
-                    Label(questionFrame, text=f"BT Level: {bt}", font=("Arial", 9)).grid(row=1, column=0, sticky="w", padx=5)
+                        # BT Level label (updated style)
+                        Label(questionFrame, text=f"BT Level: {bt}", font=("Arial", 9)).grid(row=1, column=0, sticky="w", padx=5)
 
-                    btnFrame = Frame(questionFrame)
-                    btnFrame.grid(row=0, column=1, rowspan=2, padx=10)
+                        # Buttons Frame
+                        btnFrame = Frame(questionFrame)
+                        btnFrame.grid(row=0, column=1, rowspan=2, padx=10)
 
-                    Button(btnFrame, text="Edit", width=6, 
-                        command=lambda q=question_data: self.EditQuestion(q['unit'],q['marks'],q['bt'],q['question'])).pack(pady=2)
+                        # Edit button
+                        Button(btnFrame, text="Edit", width=6, 
+                            command=lambda q=question_data: self.EditQuestion(q['unit'], q['marks'], q['bt'], q['question'])).pack(pady=2)
 
-                    Button(btnFrame, text="DEL", width=6, 
-                        command=lambda q=question_data: self.deleteQuestions(q['unit'],q['marks'],q['bt'],q['question'])).pack(pady=2)
-
+                        # Delete button
+                        Button(btnFrame, text="DEL", width=6, 
+                            command=lambda q=question_data: self.deleteQuestions(q['unit'], q['marks'], q['bt'], q['question'])).pack(pady=2)
 
         
     def getAllFilesFromQuestionsFolder(self):
