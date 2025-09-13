@@ -1,462 +1,559 @@
-from tkinter import *
-import tkinter as tk
+# GanerateQuestions.py
+# -*- coding: utf-8 -*-
+"""
+GenerateQuestions tkinter Frame.
+Implements:
+- Load questions JSON
+- Normalize question pools
+- Generate Mid-I (Unit1 vs Unit2, 3 numbered questions)
+- Generate Mid-II (Units 3-5 pairings, 3 numbered questions)
+- Generate SEM (as before)
+- Preview and Save to Word
+"""
+
 import json
 import os
 import random
-from tkinter import ttk
-from docx import Document
-from tkinter import filedialog
-from docx.shared import Inches
-from tkinter import filedialog, messagebox
+import tkinter as tk
+from tkinter import ttk, filedialog, messagebox
+from datetime import datetime
+
+# Optional dependency: python-docx for saving .docx
+try:
+    from docx import Document
+    from docx.shared import Pt
+    DOCX_AVAILABLE = True
+except Exception:
+    DOCX_AVAILABLE = False
+
+# ---------- Helper utilities ----------
+
+def normalize_unit_keys(raw_unit_dict):
+    """
+    Convert keys like '2 Marks', '2', 'Two' to integer keys 2, 5, 10.
+    Returns dict {2: [...], 5: [...], 10: [...]} (missing keys absent).
+    """
+    normalized = {}
+    for k, v in raw_unit_dict.items():
+        if not isinstance(k, str):
+            keystr = str(k).lower()
+        else:
+            keystr = k.lower().replace(" ", "").replace("-", "")
+        if keystr.startswith("2"):
+            normalized.setdefault(2, []).extend(v if isinstance(v, list) else [v])
+        elif keystr.startswith("5"):
+            normalized.setdefault(5, []).extend(v if isinstance(v, list) else [v])
+        elif keystr.startswith("10"):
+            normalized.setdefault(10, []).extend(v if isinstance(v, list) else [v])
+        else:
+            # attempt fuzzy matches
+            if "2" in keystr or "two" in keystr:
+                normalized.setdefault(2, []).extend(v if isinstance(v, list) else [v])
+            elif "5" in keystr or "five" in keystr:
+                normalized.setdefault(5, []).extend(v if isinstance(v, list) else [v])
+            elif "10" in keystr or "ten" in keystr:
+                normalized.setdefault(10, []).extend(v if isinstance(v, list) else [v])
+            else:
+                # ignore unknown key
+                pass
+    # normalize entries
+    for mark in list(normalized.keys()):
+        cleaned = []
+        for entry in normalized[mark]:
+            if isinstance(entry, dict) and "question" in entry:
+                cleaned.append({"question": entry.get("question", "").strip(),
+                                "bt": entry.get("bt", "").strip() if entry.get("bt") else ""})
+            elif isinstance(entry, str):
+                cleaned.append({"question": entry.strip(), "bt": ""})
+            else:
+                continue
+        normalized[mark] = cleaned
+    return normalized
+
+def normalize_questions_json(raw):
+    normalized_all = {}
+    for unit_name, unit_data in raw.items():
+        normalized_all[unit_name] = normalize_unit_keys(unit_data if isinstance(unit_data, dict) else {})
+    return normalized_all
+
+def pick_random_question_from_pool(pool):
+    if not pool:
+        return None
+    return random.choice(pool)
+
+# ---------- GenerateQuestions Frame ----------
 
 class GenerateQuestions(tk.Frame):
     def __init__(self, parentRoot):
         super().__init__(parentRoot)
-        self.create_form()
-        self.create_file_selection_ui()
+        self.parent = parentRoot
+        self.pack(fill="both", expand=True)
 
-        # Text widget to display generated questions
-        self.generated_display = Text(self, width=80, height=10)
-        self.generated_display.grid(row=6, column=0, columnspan=8, pady=10)
+        # State
+        self.questions_data = {}  # normalized data
+        self.current_filepath = None
+        self.generated_text = ""
+        self.seed_value = None
 
-        # Define text formatting for headers
-        self.generated_display.tag_configure('header', font=('Arial', 12, 'bold'))
+        # UI components
+        self._build_ui()
 
-        # Buttons
-        generate_button = Button(self, text="Generate Questions", width=20, command=self.generate_questions)
-        generate_button.grid(row=7, column=5, columnspan=4, pady=10)
+        # Try default file in cwd
+        default_path = os.path.join(os.getcwd(), "questions_data.json")
+        if os.path.exists(default_path):
+            self.load_questions_file(default_path)
 
-        save_button = Button(self, text="Save to Word", width=20, command=self.save_to_word)
-        save_button.grid(row=7, column=1, columnspan=4, pady=10)
+    # ---------- UI building ----------
+    def _build_ui(self):
+        top = tk.Frame(self, bg="#0b1220", pady=8)
+        top.pack(fill="x")
 
-    def create_form(self):
-        Label(self, text="Fill The Details").grid(row=0, column=1, columnspan=4, pady=10)
+        lbl = tk.Label(top, text="Question Paper Generator", font=("Helvetica", 14, "bold"),
+                       fg="white", bg="#0b1220")
+        lbl.pack(side="left", padx=12)
 
-        Label(self, text="College Name:").grid(row=1, column=0, sticky="w")
+        btn_load = tk.Button(top, text="Load file", command=self._on_load_file,
+                             bg="#10b981", fg="white", activebackground="#059669", padx=8)
+        btn_load.pack(side="right", padx=8)
+        btn_save = tk.Button(top, text="Save to Word", command=self._on_save_word,
+                             bg="#3b82f6", fg="white", activebackground="#2563eb", padx=8)
+        btn_save.pack(side="right", padx=8)
 
-        # Define JSON file path
-        current_folder = os.path.dirname(os.path.abspath(__file__))
-        json_file_path = os.path.join(current_folder, "..", "data")
+        row = tk.Frame(self, pady=6)
+        row.pack(fill="x", padx=12)
 
-        if not os.path.exists(json_file_path):
-            os.makedirs(json_file_path)
+        tk.Label(row, text="Mode:", font=("Helvetica", 10)).pack(side="left")
+        self.mode_var = tk.StringVar(value="Mid-I")
+        mode_combo = ttk.Combobox(row, textvariable=self.mode_var, values=["Mid-I", "Mid-II", "SEM"], width=10)
+        mode_combo.pack(side="left", padx=(6, 12))
+        mode_combo.state(["readonly"])
 
-        file_path = os.path.join(json_file_path, 'collegeName.json')
+        tk.Label(row, text="Seed (optional):", font=("Helvetica", 10)).pack(side="left")
+        self.seed_entry = tk.Entry(row, width=8)
+        self.seed_entry.pack(side="left", padx=(6, 12))
 
-        # Load College Name from JSON safely
-        college_name = "Default College"
-        if os.path.exists(file_path):
-            try:
-                with open(file_path, "r") as file:
-                    data = json.load(file)
-                    college_name = data.get("CollegeName", "Default College")
-            except json.JSONDecodeError:
-                print("Error: Invalid JSON format. Using default college name.")
+        self.bt_var = tk.BooleanVar(value=True)
+        bt_chk = tk.Checkbutton(row, text="Show BT tags", variable=self.bt_var)
+        bt_chk.pack(side="left")
 
-        # Display College Name
-        Label(self, text=f"{college_name}").grid(row=1, column=1, sticky="w", pady=2)
+        gen_btn = tk.Button(row, text="Generate", command=self._on_generate,
+                            bg="#ef4444", fg="white", activebackground="#dc2626", padx=12)
+        gen_btn.pack(side="right", padx=6)
 
-        Label(self, text="Year:").grid(row=2, column=0, sticky="w")
-        self.year = Entry(self, width=10)
-        self.year.grid(row=2, column=0, pady=5)
+        regen_btn = tk.Button(row, text="Regenerate", command=self._on_regenerate,
+                              bg="#f59e0b", fg="white", activebackground="#d97706", padx=12)
+        regen_btn.pack(side="right", padx=6)
 
-        Label(self, text="Semester:").grid(row=2, column=2, sticky="w")
-        self.semester = Entry(self, width=10)
-        self.semester.grid(row=2, column=3, pady=5)
+        mid = tk.Frame(self)
+        mid.pack(fill="both", expand=True, padx=12, pady=8)
 
-        Label(self, text="Branch:").grid(row=3, column=0, sticky="w")
-        self.branch = Entry(self, width=10)
-        self.branch.grid(row=3, column=0, )
+        left_panel = tk.Frame(mid)
+        left_panel.pack(side="left", fill="y")
 
-        Label(self, text="Date:").grid(row=4, column=0, sticky="w")
-        self.date = Entry(self, width=10)
-        self.date.grid(row=4, column=0, )
+        tk.Label(left_panel, text="Loaded file:", font=("Helvetica", 9, "bold")).pack(anchor="w")
+        self.lbl_file = tk.Label(left_panel, text="(none)", fg="#374151")
+        self.lbl_file.pack(anchor="w")
 
-        Label(self, text="Subject:").grid(row=3, column=2, sticky="w")
-        self.subject = Entry(self, width=10)
-        self.subject.grid(row=3, column=3, pady=5)
+        tk.Label(left_panel, text="Units preview:", font=("Helvetica", 9, "bold"), pady=6).pack(anchor="w")
+        self.units_listbox = tk.Listbox(left_panel, height=10, width=36)
+        self.units_listbox.pack()
 
-        Label(self, text="Max Marks:").grid(row=4, column=2, sticky="w")
-        self.marks = Entry(self, width=10)
-        self.marks.grid(row=4, column=3, pady=5)
+        right_panel = tk.Frame(mid)
+        right_panel.pack(side="right", fill="both", expand=True)
 
-    def create_file_selection_ui(self):
-        # Frame for selecting the Mode of Examination
-        self.selectionFrame = Frame(self)
-        self.selectionFrame.grid(row=5, column=0, padx=10, pady=20)
+        tk.Label(right_panel, text="Generated Paper Preview", font=("Helvetica", 10, "bold")).pack(anchor="w")
+        self.preview = tk.Text(right_panel, wrap="word", state="disabled", padx=8, pady=8)
+        self.preview.pack(fill="both", expand=True)
 
-        # Frame for Mode of Examination (Left side)
-        self.ModeOFExamFrame = Frame(self.selectionFrame, borderwidth=1, relief="groove", padx=10, pady=10)
-        self.ModeOFExamFrame.grid(row=5, column=0, padx=10, pady=10)
+        self.preview.tag_config("header", font=("Helvetica", 12, "bold"), foreground="#111827")
+        self.preview.tag_config("unit", font=("Helvetica", 10, "bold"), foreground="#0ea5a4")
+        self.preview.tag_config("question", font=("Helvetica", 10), foreground="#0f172a")
+        self.preview.tag_config("bt", font=("Helvetica", 9, "italic"), foreground="#6b7280")
+        self.preview.tag_config("or", font=("Helvetica", 10, "bold"), foreground="#b91c1c")
 
-        Label(
-            self.ModeOFExamFrame,
-            text="Select Mode of Examination:",
-            font=("Arial", 10, "bold")
-        ).grid(row=0, column=0, padx=5, pady=5, sticky="w")
+        bottom = tk.Frame(self, pady=6)
+        bottom.pack(fill="x")
+        self.status_lbl = tk.Label(bottom, text="Ready.", anchor="w", fg="#374151")
+        self.status_lbl.pack(fill="x", padx=12)
 
-        mode_of_exam = ["Mid-I", "Mid-II", "SEM"]
-        self.ModeOFExamCombobox = ttk.Combobox(
-            self.ModeOFExamFrame,
-            width=20,
-            values=mode_of_exam,
-            state="readonly"
-        )
-        self.ModeOFExamCombobox.grid(row=1, column=0, padx=5, pady=5)
+    # ---------- File loading ----------
+    def _on_load_file(self):
+        path = filedialog.askopenfilename(initialdir=".", title="Select questions JSON",
+                                          filetypes=[("JSON files", "*.json"), ("All files", "*.*")])
+        if path:
+            self.load_questions_file(path)
 
-        # Frame for File Selection (Right side)
-        self.fileNameFrame = Frame(self.selectionFrame, borderwidth=1, relief="groove", padx=10, pady=10)
-        self.fileNameFrame.grid(row=5, column=1, padx=10, pady=10)
-
-        Label(
-            self.fileNameFrame,
-            text="Select a File:",
-            font=("Arial", 10, "bold")
-        ).grid(row=0, column=0, padx=5, pady=5, sticky="w")
-
-        self.AllFiles = self.get_all_files_from_questions_folder()
-
-        self.fileNameEntry = ttk.Combobox(
-            self.fileNameFrame,
-            width=20,
-            values=self.AllFiles,
-            state="readonly"
-        )
-        self.fileNameEntry.grid(row=5, column=0, padx=5, pady=5)
-
-    def get_all_files_from_questions_folder(self):
+    def load_questions_file(self, path):
         try:
-            current_folder_path = os.path.dirname(os.path.abspath(__file__))
-            folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
-
-            if not os.path.exists(folder_path):
-                return []
-
-            return [f[:-5] for f in os.listdir(folder_path) if f.endswith(".json")]  
-        except Exception:
-            return []
-    
-    def generate_questions(self):
-        self.generated_display.delete(1.0, tk.END)
-
-        selected_file = self.fileNameEntry.get()
-        if not selected_file:
-            self.generated_display.insert(tk.END, "No file selected. Please choose a file.\n")
-            return
-
-        current_folder_path = os.path.dirname(os.path.abspath(__file__))
-        folder_path = os.path.join(current_folder_path, "..", "data", "Questions")
-        file_path = os.path.join(folder_path, f"{selected_file}.json")
-
-        if not os.path.exists(file_path):
-            self.generated_display.insert(tk.END, "Selected file does not exist.\n")
-            return
-
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                questions_data = json.load(f)
-        except json.JSONDecodeError:
-            self.generated_display.insert(tk.END, "Error: Invalid JSON format in the selected file.\n")
-            return
-
-        mode = self.ModeOFExamCombobox.get()
-        units = list(questions_data.keys())
-
-        if mode == "SEM":
-            if len(units) != 5:
-                self.generated_display.insert(tk.END, "SEM Mode requires exactly 5 units.\n")
-                return
-
-            # ----------- Part A (2 Marks) ------------
-            self.generated_display.insert(tk.END, f"Part - A\n")
-            self.generated_display.insert(tk.END, "1. Answer all the following questions (2 Marks Each)\n")
-
-            combined_two_mark_questions = []
-
-            for unit_data in questions_data.values():
-                unit_questions = unit_data.get("2", [])
-                if not unit_questions:
-                    continue
-                count = 2 if len(unit_questions) >= 2 else 1
-                selected = random.sample(unit_questions, count)
-                combined_two_mark_questions.extend([q['question'] for q in selected])
-
-            if len(combined_two_mark_questions) < 5:
-                self.generated_display.insert(tk.END, "Not enough 2-mark questions across units.\n")
-                return
-
-            random.shuffle(combined_two_mark_questions)
-            sub_labels = ['a)', 'b)', 'c)', 'd)', 'e)']
-            for idx in range(5):
-                self.generated_display.insert(tk.END, f"{sub_labels[idx]} {combined_two_mark_questions[idx]}\n")
-
-            # ---------- Part B ------------
-            question_number = 2
-            or_after = [1, 3, 5, 7, 9]
-
-            for unit_index, (unit, unit_data) in enumerate(questions_data.items()):
-                self.generated_display.insert(tk.END, f"\nUnit: {unit}\n", 'header')
-                self.generated_display.insert(tk.END, "-" * 50 + "\n")
-
-                five_pool = unit_data.get("5", [])
-                ten_pool = unit_data.get("10", [])
-                unit_questions = []
-
-                # Randomly choose between paired 5-mark or 10-mark question for the first question
-                if five_pool and ten_pool:
-                    first_question_type = random.choice([5, 10])
-                    if first_question_type == 5:
-                        # Select a paired 5-mark question (a + b)
-                        pair = random.sample(five_pool, 2)
-                        combined = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
-                        unit_questions.append(combined)
-                    else:
-                        # Select a 10-mark question
-                        unit_questions.append(random.choice(ten_pool)['question'])
-                elif five_pool:
-                    # Only 5-mark questions available
-                    pair = random.sample(five_pool, 2)
-                    combined = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
-                    unit_questions.append(combined)
-                elif ten_pool:
-                    # Only 10-mark questions available
-                    unit_questions.append(random.choice(ten_pool)['question'])
-
-                # Randomly select the second question (either 5-mark or 10-mark)
-                if len(unit_questions) < 1:
-                    continue  # Skip if we can't select the first question
-
-                if len(unit_questions) < 2:
-                    if five_pool:
-                        pair = random.sample(five_pool, 2)
-                        combined = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
-                        unit_questions.append(combined)
-                    elif ten_pool:
-                        unit_questions.append(random.choice(ten_pool)['question'])
-
-                if len(unit_questions) < 2:
-                    self.generated_display.insert(tk.END, "Not enough questions in this unit.\n")
-                    continue
-
-                selected = random.sample(unit_questions, 2)
-                for q in selected:
-                    self.generated_display.insert(tk.END, f"{question_number}. {q}\n\n")
-                    if question_number in or_after:
-                        self.generated_display.insert(tk.END, "                               or           \n\n")
-                    question_number += 1
-
-        elif mode in ["Mid-I", "Mid-II"]:
-            if len(units) not in [2, 3]:
-                self.generated_display.insert(tk.END, "Mid exam requires 2 or 3 units.\n")
-                return
-            
-            check_units = questions_data.items()
-            # Make sure there are at least 2 or 3 units
-            num_units = len(check_units)
- 
-            unit_names = list(questions_data.keys())
-            question_number = 1
-            unit_distribution = []
-
-            if num_units == 2:
-                unit_distribution = [unit_names[0]] * 2 + [unit_names[1]] * 2 + random.choices(unit_names, k=2)
-            elif num_units == 3:
-                unit_distribution = [unit_names[0]] * 2 + [unit_names[1]] * 2 + [unit_names[2]] * 2
-
-            self.generated_display.insert(tk.END, f"Part - B\n")
-
-            for idx, unit in enumerate(unit_distribution):
-                unit_data = questions_data.get(unit, {})
-                five_mark_pool = unit_data.get("5", [])
-                ten_mark_pool = unit_data.get("10", [])
-
-                unit_questions = []
-
-                # Create paired 5-mark question
-                if len(five_mark_pool) >= 2:
-                    pair = random.sample(five_mark_pool, 2)
-                    combined_5marks = f"a) {pair[0]['question']}\n   b) {pair[1]['question']}"
-                    unit_questions.append(combined_5marks)
-                elif len(five_mark_pool) == 1:
-                    unit_questions.append(f"Only one 5-mark question available: {five_mark_pool[0]['question']}")
-
-                # Pick one 10-mark question
-                if len(ten_mark_pool) >= 1:
-                    ten_q = random.choice(ten_mark_pool)
-                    unit_questions.append(ten_q["question"])
-
-                if len(unit_questions) < 1:
-                    self.generated_display.insert(tk.END, f"Unit {unit}: Not enough questions available.\n")
-                    continue
-
-                selected = random.choice(unit_questions)
-                self.generated_display.insert(tk.END, f"{question_number}. {selected}\n\n")
-
-                # Add "or" after 1st, 3rd, and 4th questions
-                if question_number in [1, 3, 5]:
-                    self.generated_display.insert(tk.END, f"{' ' * 40}or\n\n")
-
-                question_number += 1
-
-   
-    def save_to_word(self):
-        text_content = self.generated_display.get(1.0, tk.END)
-
-        if text_content.strip() == "":
-            messagebox.showwarning("No Content", "There are no generated questions to save.")
-            return
-
-        # Exam metadata
-        current_folder = os.path.dirname(os.path.abspath(__file__))
-        json_file_path = os.path.join(current_folder, "..", "data", "collegeName.json")
-        college_name = "Default College"
-        if os.path.exists(json_file_path):
-            try:
-                with open(json_file_path, "r") as file:
-                    data = json.load(file)
-                    college_name = data.get("CollegeName", "Default College")
-            except json.JSONDecodeError:
-                print("Invalid JSON. Using default college name.")
-
-        year = self.year.get()
-        semester = self.semester.get()
-        branch = self.branch.get()
-        subject = self.subject.get()
-        date = self.date.get()
-        marks = self.marks.get()
-        mode = self.ModeOFExamCombobox.get()
-
-        if not all([year, semester, branch, subject, date, marks, mode]):
-            messagebox.showwarning("Missing Information", "Please fill in all the details before saving.")
-            return
-
-        save_file_path = filedialog.asksaveasfilename(
-            title="Save Question Paper",
-            defaultextension=".docx",
-            filetypes=[("Word Documents", "*.docx")]
-        )
-
-        if not save_file_path:
-            return
-
-        try:
-            doc = Document()
-
-            # Add logo
-            logo_path = os.path.join(current_folder, "..", "utils", "Gpcet_logo.png")
-            if os.path.exists(logo_path):
-                doc.add_picture(logo_path, width=Inches(1))
-
-            # Header
-            title = doc.add_paragraph()
-            title.alignment = 1
-            title.add_run(college_name + "\n").bold = True
-            title.add_run("(Autonomous)\n").bold = True
-            title.add_run(f"Year: {year} | Semester: {semester} | {mode}\n")
-
-            details = doc.add_paragraph()
-            details.add_run(f"Branch: {branch}                                                                       Date: {date}\n")
-            details.add_run(f"Subject: {subject}                                                                     Max Marks: {marks}\n")
-
-            doc.add_paragraph('-' * 100)
-
-            # Process content
-            lines = text_content.strip().split("\n")
-            in_part_b = False
-            in_part_a_sub = False
-            table = None
-            part_a_text = []
-            question_number = 1
-
-            for i, line in enumerate(lines):
-                stripped = line.strip()
-
-                if "Part - A" in stripped:
-                    doc.add_paragraph("\nPart - A", style="Heading 2")
-                    in_part_b = False
-                    in_part_a_sub = False
-                    continue
-
-                elif "Part - B" in stripped:
-                    # Output Part A grouped under Q1
-                    if part_a_text:
-                        doc.add_paragraph(part_a_text[0], style="List Number")
-                        for sub in part_a_text[1:]:
-                            doc.add_paragraph(sub, style="List Bullet")
-                    part_a_text = []
-
-                    doc.add_paragraph("\nPart - B", style="Heading 2")
-                    in_part_b = True
-                    table = doc.add_table(rows=1, cols=4)
-                    table.style = 'Table Grid'
-                    hdr_cells = table.rows[0].cells
-                    hdr_cells[0].text = "Question"
-                    hdr_cells[1].text = "Marks"
-                    hdr_cells[2].text = "BT"
-                    hdr_cells[3].text = "CO"
-                    continue
-
-                elif stripped.startswith("1. Answer all the following"):
-                    # Collect Part A intro line
-                    part_a_text.append(stripped)
-                    in_part_a_sub = True
-                    continue
-
-                elif in_part_a_sub and stripped[:2] in ['a)', 'b)', 'c)', 'd)', 'e)']:
-                    part_a_text.append(stripped)
-                    continue
-
-                elif stripped.startswith("Unit:"):
-                    doc.add_paragraph(stripped, style="Heading 3")
-
-                elif in_part_b and stripped and stripped[0].isdigit() and "." in stripped:
-                    # It's a question in Part B
-                    q_num, q_text = stripped.split(".", 1)
-
-                    # Detect marks type
-                    if "a)" in q_text and "b)" in q_text:
-                        marks = "5 + 5"
-                    elif "Only one" in q_text:
-                        marks = "5"
-                    else:
-                        marks = "10"
-
-                    # Extract BT level if present
-                    bt_value = ""
-                    if "Understand" in q_text:
-                        bt_value = "Understand"
-                    elif "Analyze" in q_text:
-                        bt_value = "Analyze"
-                    elif "Create" in q_text:
-                        bt_value = "Create"
-                    elif "Remember" in q_text:
-                        bt_value = "Remember"
-
-                    row = table.add_row().cells
-                    row[0].text = q_text.strip()
-                    row[1].text = marks
-                    row[2].text = bt_value
-                    row[3].text = ""  # CO left empty
-
-                elif "or" in stripped.lower() and in_part_b:
-                    # Add "or" as a merged and centered row in the table
-                    or_row = table.add_row().cells
-                    merged_cell = or_row[0].merge(or_row[1]).merge(or_row[2]).merge(or_row[3])
-                    merged_cell.text = "or"
-                    merged_cell.paragraphs[0].alignment = 1
-
-                elif not in_part_b and not in_part_a_sub:
-                    # General line outside parts
-                    doc.add_paragraph(stripped)
-
-            # Output Part A if not already written
-            # if part_a_text:
-            #     doc.add_paragraph(part_a_text[0], style="List Number")
-            #     for sub in part_a_text[1:]:
-            #         doc.add_paragraph(sub, style="List Bullet")
-
-            doc.save(save_file_path)
-            messagebox.showinfo("Saved", f"Document saved at:\n{save_file_path}")
-
+            with open(path, "r", encoding="utf-8") as f:
+                raw = json.load(f)
         except Exception as e:
-            messagebox.showerror("Error", f"An error occurred:\n{e}")
+            messagebox.showerror("Load error", f"Failed to load JSON:\n{e}")
+            self.status_lbl.config(text="Failed to load file.")
+            return
+
+        normalized = normalize_questions_json(raw)
+        if not normalized:
+            messagebox.showerror("Format error", "Loaded JSON contains no valid units/questions.")
+            self.status_lbl.config(text="Invalid file.")
+            return
+
+        self.questions_data = normalized
+        self.current_filepath = path
+        self.lbl_file.config(text=os.path.basename(path))
+        self.units_listbox.delete(0, tk.END)
+        for unit in self.questions_data.keys():
+            unit_info = self.questions_data[unit]
+            s = f"{unit}  |  2m: {len(unit_info.get(2,[]))}  5m: {len(unit_info.get(5,[]))}  10m: {len(unit_info.get(10,[]))}"
+            self.units_listbox.insert(tk.END, s)
+        self.status_lbl.config(text=f"Loaded {len(self.questions_data)} units from file.")
+        self._clear_preview()
+
+    # ---------- Generators ----------
+    def _on_generate(self):
+        seed_text = self.seed_entry.get().strip()
+        if seed_text:
+            try:
+                seed_int = int(seed_text)
+                random.seed(seed_int)
+                self.seed_value = seed_int
+            except Exception:
+                messagebox.showwarning("Seed", "Seed must be an integer. Ignoring.")
+                self.seed_value = None
+                random.seed()
+        else:
+            self.seed_value = None
+            random.seed()
+
+        mode = self.mode_var.get()
+        if not self.questions_data:
+            messagebox.showwarning("No data", "No questions file loaded. Use 'Load file' or place questions_data.json in app folder.")
+            return
+
+        try:
+            if mode == "SEM":
+                out = self._generate_sem()
+            elif mode == "Mid-I":
+                out = self._generate_mid(mid_type=1)
+            elif mode == "Mid-II":
+                out = self._generate_mid(mid_type=2)
+            else:
+                raise ValueError("Unknown mode")
+        except ValueError as e:
+            messagebox.showerror("Validation error", str(e))
+            self.status_lbl.config(text="Generation failed.")
+            return
+
+        self.generated_text = out
+        self._render_preview(out)
+        self.status_lbl.config(text=f"Generated paper ({mode}).")
+
+    def _on_regenerate(self):
+        if self.seed_value is not None:
+            random.seed(self.seed_value)
+        else:
+            random.seed()
+        self._on_generate()
+
+    def _generate_mid(self, mid_type=1):
+        """
+        Updated behavior:
+        - Mid-I (mid_type=1): use only Unit1 and Unit2 (first two units). Produce 3 numbered questions;
+            for each question display Unit1 alternative OR Unit2 alternative; each alternative = 10 marks.
+        - Mid-II (mid_type=2): use Unit3, Unit4, Unit5 (units at indices 2,3,4). Produce 3 numbered questions with pairings:
+            Q1: Unit3 vs Unit4
+            Q2: Unit3 vs Unit5
+            Q3: Unit4 vs Unit5
+        """
+        units = list(self.questions_data.keys())
+        n_units = len(units)
+
+        def prepare_local_pools(unit_name):
+            u = self.questions_data.get(unit_name, {})
+            # shallow copies so we can pop without affecting original in case we want to reuse original for fallback
+            return {
+                10: u.get(10, []).copy(),
+                5: u.get(5, []).copy(),
+                2: u.get(2, []).copy()
+            }
+
+        def select_10_or_5pair(unit_name, local_pools, orig_pools):
+            """
+            Try to pick a fresh 10m from local_pools; if not possible, pick two 5m from local_pools.
+            If local pools exhausted, fallback to random choice from orig_pools and return note='(reused)'.
+            Returns dict with keys: type (10 or '5+5'), text (string), bt (string), reused (bool)
+            """
+            reused = False
+            lp = local_pools[unit_name]
+            op = orig_pools[unit_name]
+            # try 10-mark fresh
+            if lp[10]:
+                q10 = lp[10].pop(random.randrange(len(lp[10])))
+                return {"type": 10, "text": f"{unit_name} - {q10['question']}", "bt": q10.get("bt", ""), "reused": False}
+            # try two fresh 5-marks
+            if len(lp[5]) >= 2:
+                a = lp[5].pop(random.randrange(len(lp[5])))
+                b = lp[5].pop(random.randrange(len(lp[5])))
+                return {"type": "5+5", "text": f"{unit_name} - (a) {a['question']}  (b) {b['question']}", "bt": f"{a.get('bt','')} / {b.get('bt','')}", "reused": False}
+            if len(lp[5]) == 1:
+                a = lp[5].pop(0)
+                # duplicate it (only one available)
+                return {"type": "5+5", "text": f"{unit_name} - (a) {a['question']}  (b) {a['question']}  (NOTE: only one 5m available)", "bt": a.get("bt",""), "reused": False}
+
+            # Fallback (reuse from original pools)
+            reused = True
+            if op.get(10):
+                q10 = random.choice(op[10])
+                return {"type": 10, "text": f"{unit_name} - {q10['question']}  (reused)", "bt": q10.get("bt", ""), "reused": True}
+            if op.get(5):
+                # try distinct if possible
+                if len(op[5]) >= 2:
+                    a, b = random.sample(op[5], 2)
+                    return {"type": "5+5", "text": f"{unit_name} - (a) {a['question']}  (b) {b['question']}  (reused)", "bt": f"{a.get('bt','')} / {b.get('bt','')}", "reused": True}
+                else:
+                    a = op[5][0]
+                    return {"type": "5+5", "text": f"{unit_name} - (a) {a['question']}  (b) {a['question']}  (reused)", "bt": a.get("bt",""), "reused": True}
+            # nothing at all
+            return None
+
+        # Mid-I rules
+        if mid_type == 1:
+            if n_units < 2:
+                raise ValueError("Mid-I requires at least 2 units (Unit1 and Unit2) in the questions file.")
+            unitA = units[0]
+            unitB = units[1]
+            # prepare pools
+            local_pools = {unitA: prepare_local_pools(unitA), unitB: prepare_local_pools(unitB)}
+            orig_pools = {unitA: {"10": self.questions_data[unitA].get(10, []).copy(), "5": self.questions_data[unitA].get(5, []).copy()},
+                          unitB: {"10": self.questions_data[unitB].get(10, []).copy(), "5": self.questions_data[unitB].get(5, []).copy()}}
+            slots = []
+            any_reused = False
+            # generate 3 questions (Q1..Q3)
+            for i in range(3):
+                altA = select_10_or_5pair(unitA, local_pools, orig_pools)
+                altB = select_10_or_5pair(unitB, local_pools, orig_pools)
+                if altA is None or altB is None:
+                    raise ValueError(f"Unable to find any suitable questions for Mid-I from '{unitA}' and/or '{unitB}'.")
+                if altA.get("reused") or altB.get("reused"):
+                    any_reused = True
+                slots.append((altA, altB))
+
+            # format output
+            lines = []
+            lines.append("MID TERM EXAM\n")
+            for idx, (a, b) in enumerate(slots, start=1):
+                # show unit A alt then OR then unit B alt
+                if a["type"] == 10:
+                    lines.append(f"Q{idx}. {a['text']}  [10 marks]")
+                else:
+                    lines.append(f"Q{idx}. {a['text']}  [10 marks]")
+                lines.append("     OR")
+                if b["type"] == 10:
+                    lines.append(f"     {b['text']}  [10 marks]")
+                else:
+                    lines.append(f"     {b['text']}  [10 marks]")
+                if self.bt_var.get():
+                    lines.append(f"    BT: {a.get('bt','')}   OR   {b.get('bt','')}")
+                lines.append("")
+            if any_reused:
+                lines.append("(Note: some alternatives were reused due to limited question pool.)")
+            return "\n".join(lines)
+
+        # Mid-II rules
+        else:
+            # require units 3,4,5 present
+            if n_units < 5:
+                raise ValueError("Mid-II requires at least 5 units in the questions file (so Unit3, Unit4, Unit5 are present).")
+            u3, u4, u5 = units[2], units[3], units[4]
+            # pairings: (3 vs 4), (3 vs 5), (4 vs 5)
+            pairings = [(u3, u4), (u3, u5), (u4, u5)]
+            local_pools = {u3: prepare_local_pools(u3), u4: prepare_local_pools(u4), u5: prepare_local_pools(u5)}
+            orig_pools = {
+                u3: {"10": self.questions_data[u3].get(10, []).copy(), "5": self.questions_data[u3].get(5, []).copy()},
+                u4: {"10": self.questions_data[u4].get(10, []).copy(), "5": self.questions_data[u4].get(5, []).copy()},
+                u5: {"10": self.questions_data[u5].get(10, []).copy(), "5": self.questions_data[u5].get(5, []).copy()},
+            }
+            slots = []
+            any_reused = False
+            for (left, right) in pairings:
+                altL = select_10_or_5pair(left, local_pools, orig_pools)
+                altR = select_10_or_5pair(right, local_pools, orig_pools)
+                if altL is None or altR is None:
+                    raise ValueError(f"Unable to find suitable questions for Mid-II pair: '{left}' vs '{right}'.")
+                if altL.get("reused") or altR.get("reused"):
+                    any_reused = True
+                slots.append((altL, altR))
+            # format output
+            lines = []
+            lines.append("MID TERM EXAM - (Mid II)\n")
+            for idx, (a, b) in enumerate(slots, start=1):
+                lines.append(f"Q{idx}. {a['text']}  [10 marks]")
+                lines.append("     OR")
+                lines.append(f"     {b['text']}  [10 marks]")
+                if self.bt_var.get():
+                    lines.append(f"    BT: {a.get('bt','')}   OR   {b.get('bt','')}")
+                lines.append("")
+            if any_reused:
+                lines.append("(Note: some alternatives were reused due to limited question pool.)")
+            return "\n".join(lines)
+
+    # ---------- SEM generator (unchanged) ----------
+    def _generate_sem(self):
+        units = list(self.questions_data.keys())
+        if len(units) != 5:
+            raise ValueError("SEM generation requires exactly 5 units in the questions file (one per unit).")
+
+        # Part A
+        partA = []
+        for unit in units:
+            pool2 = self.questions_data[unit].get(2, [])
+            if not pool2:
+                raise ValueError(f"SEM Part A requires at least one 2-mark question in '{unit}'.")
+            q2 = pick_random_question_from_pool(pool2)
+            partA.append({"unit": unit, "text": q2["question"], "bt": q2.get("bt", "")})
+
+        # Part B
+        partB = []
+        for unit in units:
+            pools = self.questions_data[unit]
+            alternatives = []
+            if pools.get(10):
+                q10 = pick_random_question_from_pool(pools[10])
+                alternatives.append({"type": 10, "text": q10["question"], "bt": q10.get("bt", "")})
+            if len(pools.get(5, [])) >= 2:
+                a, b = random.sample(pools[5], 2)
+                alternatives.append({"type": "5+5", "text": (a["question"], b["question"]), "bt": f"{a.get('bt','')} / {b.get('bt','')}"})
+            elif len(pools.get(5, [])) == 1:
+                a = pools[5][0]
+                alternatives.append({"type": "5+5", "text": (a["question"], a["question"]), "bt": a.get("bt","") + " (dup)"})
+            if not alternatives:
+                raise ValueError(f"Unit '{unit}' lacks both 10m and 5m questions required for SEM Part B.")
+            if len(alternatives) == 1:
+                alternatives.append({"type": alternatives[0]["type"], "text": alternatives[0]["text"], "bt": alternatives[0].get("bt","") + " (only)"} )
+            a_alt, b_alt = random.sample(alternatives, 2)
+            partB.append({"unit": unit, "alt1": a_alt, "alt2": b_alt})
+
+        lines = []
+        lines.append("SEMESTER EXAM\n")
+        lines.append("PART A: (Answer all - 2 Marks each)\n")
+        for i, q in enumerate(partA, start=1):
+            lines.append(f"{i}. ({q['unit']}) {q['text']}  [2 marks]")
+            if self.bt_var.get() and q.get("bt"):
+                lines.append(f"    BT: {q.get('bt')}")
+        lines.append("\nPART B: (For each unit, answer ONE of the following - 10 marks each)\n")
+
+        qnum = 1
+        for pb in partB:
+            lines.append(f"Unit: {pb['unit']}")
+            alt1 = pb['alt1']
+            alt2 = pb['alt2']
+            if alt1["type"] == 10:
+                lines.append(f"{qnum}. (a) {alt1['text']}  [10 marks]")
+            else:
+                a1, b1 = alt1["text"]
+                lines.append(f"{qnum}. (a) (i) {a1}  (ii) {b1}  [5 + 5 = 10 marks]")
+            lines.append("     OR")
+            if alt2["type"] == 10:
+                lines.append(f"     (b) {alt2['text']}  [10 marks]")
+            else:
+                a2, b2 = alt2["text"]
+                lines.append(f"     (b) (i) {a2}  (ii) {b2}  [5 + 5 = 10 marks]")
+            if self.bt_var.get():
+                lines.append(f"    BT: {alt1.get('bt','')}   OR   {alt2.get('bt','')}")
+            lines.append("")
+            qnum += 1
+
+        return "\n".join(lines)
+
+    # ---------- Preview rendering ----------
+    def _clear_preview(self):
+        self.preview.config(state="normal")
+        self.preview.delete("1.0", tk.END)
+        self.preview.config(state="disabled")
+
+    def _render_preview(self, text):
+        self.preview.config(state="normal")
+        self.preview.delete("1.0", tk.END)
+
+        lines = text.splitlines()
+        for ln in lines:
+            stripped = ln.strip()
+            if not stripped:
+                self.preview.insert(tk.END, "\n")
+                continue
+            if stripped.upper().startswith("MID TERM") or stripped.upper().startswith("SEMESTER"):
+                self.preview.insert(tk.END, ln + "\n", "header")
+            elif stripped.startswith("PART A") or stripped.startswith("PART B"):
+                self.preview.insert(tk.END, ln + "\n", "header")
+            elif stripped.startswith("Unit:"):
+                self.preview.insert(tk.END, ln + "\n", "unit")
+            elif stripped.strip() == "OR" or stripped.startswith("OR"):
+                self.preview.insert(tk.END, ln + "\n", "or")
+            elif "BT:" in stripped:
+                self.preview.insert(tk.END, ln + "\n", "bt")
+            else:
+                self.preview.insert(tk.END, ln + "\n", "question")
+
+        self.preview.config(state="disabled")
+
+    # ---------- Save to Word ----------
+    def _on_save_word(self):
+        if not self.generated_text:
+            messagebox.showwarning("No paper", "No generated paper to save. Click Generate first.")
+            return
+        if not DOCX_AVAILABLE:
+            messagebox.showerror("Missing dependency", "python-docx is not installed. Install it to enable Word export:\n\npip install python-docx")
+            return
+
+        default_name = f"Generated_Paper_{datetime.now().strftime('%Y%m%d_%H%M%S')}.docx"
+        path = filedialog.asksaveasfilename(defaultextension=".docx", initialfile=default_name,
+                                            filetypes=[("Word Document", "*.docx")])
+        if not path:
+            return
+
+        try:
+            self._save_docx(path, self.generated_text)
+            messagebox.showinfo("Saved", f"Saved Word document to:\n{path}")
+            self.status_lbl.config(text=f"Saved: {os.path.basename(path)}")
+        except Exception as e:
+            messagebox.showerror("Save error", f"Failed to save DOCX:\n{e}")
+            self.status_lbl.config(text="Save failed.")
+
+    def _save_docx(self, path, text):
+        doc = Document()
+        style = doc.styles['Normal']
+        font = style.font
+        font.name = 'Calibri'
+        font.size = Pt(11)
+
+        lines = text.splitlines()
+        for ln in lines:
+            if not ln.strip():
+                doc.add_paragraph("")
+                continue
+            s = ln.strip()
+            if s.upper().startswith("MID TERM") or s.upper().startswith("SEMESTER"):
+                p = doc.add_paragraph()
+                run = p.add_run(s)
+                run.bold = True
+                run.font.size = Pt(14)
+            elif s.startswith("PART A") or s.startswith("PART B"):
+                p = doc.add_paragraph()
+                run = p.add_run(s)
+                run.bold = True
+                run.font.size = Pt(12)
+            elif s.startswith("Unit:"):
+                p = doc.add_paragraph()
+                run = p.add_run(s)
+                run.bold = True
+            else:
+                p = doc.add_paragraph(s)
+        doc.save(path)
+
+# Minimal test
+if __name__ == "__main__":
+    root = tk.Tk()
+    root.title("Question Generator - Demo")
+    root.geometry("900x640")
+    frame = GenerateQuestions(root)
+    root.mainloop()
