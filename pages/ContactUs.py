@@ -22,10 +22,10 @@ class ContactUs(tk.Frame):
 
         # Team Details
         team_members = [
-            {"name": "Prasad", "role": "Developer", "email": "venkatdurgaprasad4@gmail.com"},
-            {"name": "Kategar Ganesh", "role": "Developer", "email": "ganeshkategar23@gmail.com"},
-            {"name": "Jaya Deep", "role": "UI/UX Designer", "email": "karanamjayadeep@gmail.com"},
             {"name": "Ganesh chandra", "role": "Project Manager", "email": "ganeshchandracodes@gmail.com"},
+            {"name": "Kategar Ganesh", "role": "Developer", "email": "ganeshkategar23@gmail.com"},
+            {"name": "Prasad", "role": "Developer", "email": "venkatdurgaprasad4@gmail.com"},
+            {"name": "Jaya Deep", "role": "UI/UX Designer", "email": "karanamjayadeep@gmail.com"},
         ]
 
         # Developer cards
