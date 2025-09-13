@@ -65,9 +65,10 @@ class HelpPage(tk.Frame):
                 bg="#f7f9fa",
                 justify="left",
                 anchor="w",
+                wraplength=10
             )
             heading_label.pack(padx=20, pady=(10, 4), anchor="w")
-            text_label.pack(padx=40, pady=(0, 10), anchor="w")
+            text_label.pack(padx=30, pady=(0, 10), anchor="w")
 
         add_section(scrollable_frame, "Create Questions",
         "1.In the create Page You can First select the file you want to store the questions or can create by typing the file name in the subject box.\n" \
@@ -78,13 +79,14 @@ class HelpPage(tk.Frame):
         )
 
         add_section(scrollable_frame, "Generate Questions",
-        "1.In the Generate Page You need the enter the nessecary details like Mode of Examination ,Subject, Set Number , Subject file \n" \
-        "2.After that you need Select the mode of exam (Mid,Sem) from the drop box menu \n" \
-        "3.Now select the subject file from the select file from the drop box menu \n" \
-        "4.Click on the generate questions to generate questions for the particular exam (mid,sem) \n" \
-        "5.You can edit the questions there itself but it will not save the changes to the data in the file \n" \
-        "6.Click the save to word button if you are satisfied with the generated questions \n" \
-        "7.Select the destination of where you want to save the file in \n"
+        "1.In the Generate Page you need Select the mode of exam (Mid,Sem) from the drop box menu \n" \
+        "2.Now select the subject file from the load file button on top right \n" \
+        "3.An Optional feature is to set a seed for the generated question paper to generate the exact question paper everytime for the file \n" \
+        "4.You can also use checkbox for BT to be shown on the generated question papers \n " \
+        "5.After choosing your preffered way to generate Question Paper click on the generate questions to generate questions for the particular exam (mid,sem) \n" \
+        "6.If you did not like the generated question you click on regenerate to generate question paper again. \n" \
+        "7.Click the save to word button if you are satisfied with the generated questions \n" \
+        "8.Select the destination of where you want to save the file in \n"
         )
 
         add_section(scrollable_frame, "Edit Questions",
